@@ -1,4 +1,4 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { Dimensions, StyleSheet } from 'react-native';
 import { Colors } from './colors'; // Asegúrate de que la ruta apunte correctamente a tu Colors.ts
 
 const { width } = Dimensions.get('window');
@@ -181,4 +181,5 @@ export const stylesHome = StyleSheet.create({
     color: '#48CAE4',
     fontSize: 12,
   },
+  // PRUEBA YAHIR 2026/19/05
 });
