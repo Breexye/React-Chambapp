@@ -1,11 +1,11 @@
-import React from 'react';
-import { ScrollView, View, TextInput, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { CategoryCard } from '@/components/CategoryCard';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { CategoryCard } from '@/components/CategoryCard'; 
 import { stylesHome } from '@/constants/stylesHome';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import React from 'react';
+import { ScrollView, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -13,7 +13,6 @@ export default function HomeScreen() {
   return (
     <ScrollView style={stylesHome.container} showsVerticalScrollIndicator={false}>
       
-      {/* Header General con nuevo azul #0077B6 */}
       <View style={stylesHome.header}>
         <View style={stylesHome.topRow}>
           <View style={stylesHome.logoContainer}>
@@ -22,9 +21,10 @@ export default function HomeScreen() {
           </View>
           
           <View style={stylesHome.authContainer}>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/login')}>
               <ThemedText style={stylesHome.loginText}>Entrar</ThemedText>
             </TouchableOpacity>
+            
             <TouchableOpacity 
               style={stylesHome.registerButton} 
               onPress={() => router.push('/register')}
@@ -34,7 +34,6 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Buscador y Frase de Bienvenida */}
         <View style={stylesHome.headerContent}>
           <ThemedText style={stylesHome.greeting}>Encuentra tu chamba</ThemedText>
           <ThemedText style={stylesHome.subGreeting}>Trabajadores expertos cerca de ti</ThemedText>
@@ -53,7 +52,6 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Grid de Oficios Populares */}
       <ThemedView style={stylesHome.section}>
         <ThemedText type="subtitle" style={stylesHome.sectionTitle}>Oficios Populares</ThemedText>
         <View style={stylesHome.grid}>
@@ -67,7 +65,6 @@ export default function HomeScreen() {
           <CategoryCard name="Mecánica" icon="settings-outline" count={89} />
         </View>
 
-        {/* Sección ¿Eres Trabajador? transformado a la nueva paleta */}
         <View style={stylesHome.workerCard}>
           <Ionicons name="construct" size={40} color="white" />
           <ThemedText style={stylesHome.workerTitle}>¿Eres Trabajador?</ThemedText>
@@ -81,7 +78,6 @@ export default function HomeScreen() {
         </View>
       </ThemedView>
 
-      {/* Footer Final usando el azul más profundo #03045E */}
       <View style={stylesHome.footer}>
         <View style={stylesHome.footerLogoRow}>
           <Ionicons name="briefcase" size={20} color="white" />
