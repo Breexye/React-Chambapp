@@ -1,27 +1,32 @@
-import React from 'react';
-import { Text, StyleSheet, TouchableOpacity, View, Dimensions } from 'react-native';
+import { Colors } from '@/constants/colors';
 import { Ionicons } from '@expo/vector-icons';
-import { ComponentProps } from 'react';
-import { Colors } from '@/constants/colors'; 
+import React, { ComponentProps } from 'react';
+import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const { width } = Dimensions.get('window');
 const isWebOrTablet = width > 768;
 
 type IoniconsName = ComponentProps<typeof Ionicons>['name'];
 
-interface Props {
+interface CategoryCardProps {
   name: string;
-  icon: IoniconsName; 
+  icon: string;
   count: number;
+  onPress?: () => void;
 }
 
-export const CategoryCard = ({ name, icon, count }: Props) => {
+export const CategoryCard: React.FC<CategoryCardProps> = ({ name, icon, count, onPress }) => {
   return (
-    <TouchableOpacity style={styles.container}>
+    <TouchableOpacity onPress={onPress} style={styles.container} activeOpacity={0.7}>
+      {/* Círculo del Icono */}
       <View style={styles.iconCircle}>
-        <Ionicons name={icon} size={28} color={Colors.light.iconColor} />
+        <Ionicons name={icon as IoniconsName} size={28} color="#0085FF" />
       </View>
+      
+      {/* Nombre del Oficio */}
       <Text style={styles.name}>{name}</Text>
+      
+      {/* Contador de Trabajos */}
       <Text style={styles.count}>{count} trabajos</Text>
     </TouchableOpacity>
   );
@@ -30,15 +35,15 @@ export const CategoryCard = ({ name, icon, count }: Props) => {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    width: isWebOrTablet ? '15%' : '25%', 
+    width: isWebOrTablet ? '15%' : '25%',
     marginBottom: 32,
     paddingHorizontal: 8,
   },
   iconCircle: {
     width: 55,
     height: 55,
-    borderRadius: 15, 
-    backgroundColor: Colors.light.iconBg, 
+    borderRadius: 15,
+    backgroundColor: Colors.light.iconBg,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: Colors.light.primary,
@@ -52,11 +57,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 8,
     textAlign: 'center',
-    color: Colors.light.secondary, 
+    color: Colors.light.secondary,
   },
   count: {
     fontSize: 9,
-    color: Colors.light.accent, 
+    color: Colors.light.accent,
     marginTop: 2,
-  }
+  },
 });
