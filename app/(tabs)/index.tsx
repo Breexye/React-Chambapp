@@ -52,41 +52,90 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <ThemedView style={stylesHome.section}>
-        <ThemedText type="subtitle" style={stylesHome.sectionTitle}>Oficios Populares</ThemedText>
-        <View style={stylesHome.grid}>
-          <CategoryCard name="Plomería" icon="water-outline" count={245} />
-          <CategoryCard name="Electricista" icon="flash-outline" count={198} />
-          <CategoryCard name="Carpintería" icon="hammer-outline" count={167} />
-          <CategoryCard name="Pintura" icon="brush-outline" count={156} />
-          <CategoryCard name="Albañilería" icon="construct-outline" count={134} />
-          <CategoryCard name="Jardinería" icon="leaf-outline" count={112} />
-          <CategoryCard name="Limpieza" icon="sparkles-outline" count={203} />
-          <CategoryCard name="Mecánica" icon="settings-outline" count={89} />
-        </View>
+  <ThemedView style={stylesHome.section}>
+      <ThemedText type="subtitle" style={stylesHome.sectionTitle}>Oficios Populares</ThemedText>
+      <View style={stylesHome.grid}>
+        <CategoryCard 
+          name="Plomería" 
+          icon="water-outline" 
+          count={245} 
+          onPress={() => router.push({ pathname: '/explore', params: { category: 'Plomería' } })} 
+        />
 
-        <View style={stylesHome.workerCard}>
-          <Ionicons name="construct" size={40} color="white" />
-          <ThemedText style={stylesHome.workerTitle}>¿Eres Trabajador?</ThemedText>
-          <ThemedText style={stylesHome.workerSubtitle}>Únete y conecta con clientes</ThemedText>
-          <TouchableOpacity 
-            style={stylesHome.workerRegisterButton} 
-            onPress={() => router.push('/register')}
-          >
-            <ThemedText style={stylesHome.workerRegisterText}>Regístrate Gratis</ThemedText>
-          </TouchableOpacity>
-        </View>
-      </ThemedView>
+        <CategoryCard 
+          name="Electricista" 
+          icon="flash-outline" 
+          count={198} 
+          onPress={() => router.push({ pathname: '/explore', params: { category: 'Electricista' } })} 
+        />
 
-      <View style={stylesHome.footer}>
-        <View style={stylesHome.footerLogoRow}>
-          <Ionicons name="briefcase" size={20} color="white" />
-          <ThemedText style={stylesHome.footerBrandName}>ChambApp</ThemedText>
-        </View>
-        <ThemedText style={stylesHome.footerText}>Tu plataforma de chambas en México</ThemedText>
-        <ThemedText style={stylesHome.footerCopyright}>© 2026 ChambApp</ThemedText>
+        <CategoryCard 
+          name="Carpintería" 
+          icon="hammer-outline" 
+          count={167} 
+          onPress={() => router.push({ pathname: '/explore', params: { category: 'Carpintería' } })} 
+        />
+
+        <CategoryCard 
+          name="Pintura" 
+          icon="brush-outline" 
+          count={156} 
+          onPress={() => router.push({ pathname: '/explore', params: { category: 'Pintura' } })} 
+        />
+
+        <CategoryCard 
+          name="Albañilería" 
+          icon="construct-outline" 
+          count={134} 
+          onPress={() => router.push({ pathname: '/explore', params: { category: 'Albañilería' } })} 
+        />
+
+        <CategoryCard 
+          name="Jardinería" 
+          icon="leaf-outline" 
+          count={112} 
+          onPress={() => router.push({ pathname: '/explore', params: { category: 'Jardinería' } })} 
+        />
+
+        <CategoryCard 
+          name="Limpieza" 
+          icon="sparkles-outline" 
+          count={203} 
+          onPress={() => router.push({ pathname: '/explore', params: { category: 'Limpieza' } })} 
+        />
+
+        <CategoryCard 
+          name="Mecánica" 
+          icon="settings-outline" 
+          count={89} 
+          onPress={() => router.push({ pathname: '/explore', params: { category: 'Mecánica' } })} 
+        />
+ </View>
+    </ThemedView>
+
+    {/* Tarjeta de Trabajador */}
+    <View style={stylesHome.workerCard}>
+      <Ionicons name="construct" size={40} color="white" />
+      <ThemedText style={stylesHome.workerTitle}>¿Eres Trabajador?</ThemedText>
+      <ThemedText style={stylesHome.workerSubtitle}>Únete y conecta con clientes</ThemedText>
+      <TouchableOpacity 
+        style={stylesHome.workerRegisterButton}
+        onPress={() => router.push('/register')}
+      >
+        <ThemedText style={stylesHome.workerRegisterText}>Regístrate Gratis</ThemedText>
+      </TouchableOpacity>
+    </View>
+
+    {/* Footer */}
+    <View style={stylesHome.footer}>
+      <View style={stylesHome.footerLogoRow}>
+        <Ionicons name="briefcase" size={20} color="white" />
+        <ThemedText style={stylesHome.footerBrandName}>ChambApp</ThemedText>
       </View>
+      <ThemedText style={stylesHome.footerText}>Tu plataforma de chambas en México</ThemedText>
+      <ThemedText style={stylesHome.footerCopyright}>© 2026 ChambApp</ThemedText>
+    </View>
 
-    </ScrollView>
-  );
+  </ScrollView>
+);
 }
