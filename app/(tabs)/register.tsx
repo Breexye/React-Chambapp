@@ -4,11 +4,30 @@ import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/themed-text';
 import { stylesRegister } from '@/constants/stylesRegister';
 import { useRouter } from 'expo-router';
+import { useFormValidation } from '@/hooks/use-register-validation';
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const { errors, validate } = useFormValidation();
+  
   const [role, setRole] = useState<'cliente' | 'trabajador'>('cliente');
   const [isPasswordHidden, setIsPasswordHidden] = useState(true);
+  
+  // Estados para los datos del formulario
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleRegister = () => {
+    // Es importante crear el objeto justo al momento de validar
+    const data = { name, email, phone, password };
+    if (validate(data)) {
+      console.log("Formulario válido, procediendo...");
+    } else {
+      console.log("Errores de validación:", errors);
+    }
+  };
 
   return (
     <KeyboardAvoidingView 
@@ -51,24 +70,46 @@ export default function RegisterScreen() {
             <ThemedText style={stylesRegister.inputLabel}>Nombre Completo</ThemedText>
             <View style={stylesRegister.inputContainer}>
               <Ionicons name="person-outline" size={18} color="#9CA3AF" style={stylesRegister.inputIcon} />
-              <TextInput placeholder="Juan Pérez" placeholderTextColor="#9CA3AF" style={stylesRegister.input} />
+              <TextInput 
+              placeholder="Juan Pérez" 
+              testID="input-name"
+              placeholderTextColor="#9CA3AF" 
+              style={stylesRegister.input} 
+              value={name} 
+              onChangeText={setName} />  
             </View>
+            {errors.name ? <ThemedText style={{color: 'red'}}>{errors.name}</ThemedText> : null}
           </View>
 
           <View style={stylesRegister.inputGroup}>
             <ThemedText style={stylesRegister.inputLabel}>Correo Electrónico</ThemedText>
             <View style={stylesRegister.inputContainer}>
               <Ionicons name="mail-outline" size={18} color="#9CA3AF" style={stylesRegister.inputIcon} />
-              <TextInput placeholder="tu@email.com" placeholderTextColor="#9CA3AF" style={stylesRegister.input} keyboardType="email-address" />
+              <TextInput 
+              placeholder="tu@email.com" 
+              testID="input-email"
+              placeholderTextColor="#9CA3AF" 
+              style={stylesRegister.input} 
+              keyboardType="email-address" 
+              value={email} onChangeText={setEmail} /> 
             </View>
+            {errors.email ? <ThemedText style={{color: 'red'}}>{errors.email}</ThemedText> : null}
           </View>
 
           <View style={stylesRegister.inputGroup}>
             <ThemedText style={stylesRegister.inputLabel}>Teléfono</ThemedText>
             <View style={stylesRegister.inputContainer}>
               <Ionicons name="call-outline" size={18} color="#9CA3AF" style={stylesRegister.inputIcon} />
-              <TextInput placeholder="555-123-4567" placeholderTextColor="#9CA3AF" style={stylesRegister.input} keyboardType="phone-pad" />
+              <TextInput 
+              placeholder="555-123-4567" 
+              testID="input-phone"
+              placeholderTextColor="#9CA3AF" 
+              style={stylesRegister.input} 
+              keyboardType="phone-pad" 
+              value={phone} 
+              onChangeText={setPhone}  />
             </View>
+            {errors.phone ? <ThemedText style={{color: 'red'}}>{errors.phone}</ThemedText> : null}
           </View>
 
           <View style={stylesRegister.inputGroup}>
@@ -77,10 +118,14 @@ export default function RegisterScreen() {
               <Ionicons name="lock-closed-outline" size={18} color="#9CA3AF" style={stylesRegister.inputIcon} />
               <TextInput 
                 placeholder="••••••••" 
+                testID="input-password"
                 placeholderTextColor="#9CA3AF" 
                 style={stylesRegister.input} 
                 secureTextEntry={isPasswordHidden} 
+                value={password}
+                onChangeText={setPassword}
               />
+              
               <TouchableOpacity onPress={() => setIsPasswordHidden(!isPasswordHidden)}>
                 <Ionicons 
                   name={isPasswordHidden ? "eye-off-outline" : "eye-outline"} 
@@ -89,9 +134,11 @@ export default function RegisterScreen() {
                 />
               </TouchableOpacity>
             </View>
+            {errors.password ? <ThemedText style={{color: 'red'}}>{errors.password}</ThemedText> : null}
           </View>
 
-          <TouchableOpacity style={stylesRegister.submitButton}>
+          {/* AQUÍ ESTÁ EL BOTÓN CORREGIDO CON SU ONPRESS */}
+          <TouchableOpacity testID="btn-register" style={stylesRegister.submitButton} onPress={handleRegister}>
             <ThemedText style={stylesRegister.submitButtonText}>Crear Cuenta Gratis →</ThemedText>
           </TouchableOpacity>
 
