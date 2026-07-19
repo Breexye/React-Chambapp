@@ -1,5 +1,5 @@
 import { Dimensions, StyleSheet } from 'react-native';
-import { Colors } from './colors'; // Asegúrate de que la ruta apunte correctamente a tu Colors.ts
+import { Colors } from './colors'; 
 
 const { width } = Dimensions.get('window');
 const isWebOrTablet = width > 768;
@@ -66,7 +66,7 @@ export const stylesHome = StyleSheet.create({
     fontWeight: 'bold',
   },
   subGreeting: {
-    color: '#CAF0F8', // Se mantiene blanco-celeste directo para contraste sobre el fondo azul
+    color: '#CAF0F8', 
     fontSize: isWebOrTablet ? 18 : 15,
     marginBottom: 30,
   },
@@ -76,7 +76,7 @@ export const stylesHome = StyleSheet.create({
     borderRadius: 16,
     padding: 10,
     alignItems: 'center',
-    width: isWebOrTablet ? 500 : '100%', 
+    width: isWebOrTablet ? '40%' : '100%', 
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
@@ -117,6 +117,37 @@ export const stylesHome = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between', 
     width: '100%',
+  },
+  oficioCard: { 
+    width: isWebOrTablet ? '11%' : '30%', 
+    backgroundColor: '#F8FAFC', 
+    paddingVertical: 15, 
+    alignItems: 'center', 
+    borderRadius: 12, 
+    marginBottom: 15, 
+    borderWidth: 1, 
+    borderColor: '#E2E8F0',
+  },
+  oficioIconCircle: { 
+    width: 45, 
+    height: 45, 
+    borderRadius: 22.5, 
+    backgroundColor: '#E0F7FA', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    marginBottom: 8 
+  },
+  oficioLabel: { 
+    fontSize: 11, 
+    fontWeight: 'bold', 
+    color: '#334155', 
+    textAlign: 'center' 
+  },
+  oficioJobs: { 
+    fontSize: 9, 
+    color: '#94A3B8', 
+    marginTop: 2, 
+    textAlign: 'center' 
   },
   workerCard: {
     backgroundColor: Colors.light.primary,
@@ -181,5 +212,99 @@ export const stylesHome = StyleSheet.create({
     color: '#48CAE4',
     fontSize: 12,
   },
+  resultsSection: { 
+    paddingVertical: 20 
+  },
+  appContainer: { 
+    flex: 1, 
+    backgroundColor: Colors.light.secondary 
+  },
+  globalHeaderTopRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    paddingHorizontal: 15, 
+    paddingTop: 50, 
+    paddingBottom: 10 
+  },
+  headerIconBtn: { 
+    width: 40, 
+    height: 40, 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
+  globalHeaderLogo: { 
+    fontSize: 20, 
+    fontWeight: 'bold', 
+    color: '#FFFFFF' 
+  },
+  globalWelcomeRow: { 
+    paddingHorizontal: 20, 
+    paddingVertical: 10 
+  },
+  globalWelcomeText: { 
+    fontSize: 16, 
+    color: '#00B4D8', 
+    fontWeight: '500' 
+  },
+  modalOverlay: { 
+    flex: 1, 
+    backgroundColor: 'rgba(0, 0, 0, 0.4)' 
+  },
+  closeOverlay: { 
+    position: 'absolute', 
+    top: 0, 
+    bottom: 0, 
+    left: 0, 
+    right: 0, 
+    zIndex: 1 
+  },
+  menuDrawer: { 
+    position: 'absolute', 
+    left: 0, 
+    top: 0, 
+    bottom: 0, 
+    zIndex: 2, 
+    width: isWebOrTablet ? 300 : width * 0.7, 
+    height: '100%', 
+    backgroundColor: '#001E36', 
+    paddingTop: 60, 
+    paddingHorizontal: 15, 
+    borderRightWidth: 1, 
+    borderRightColor: 'rgba(255,255,255,0.05)' 
+  },
+  menuHeader: { 
+    paddingBottom: 20, 
+    marginBottom: 15, 
+    borderBottomWidth: 1, 
+    borderBottomColor: 'rgba(255,255,255,0.1)' 
+  },
+  menuHeaderTitle: { 
+    fontSize: 18, 
+    fontWeight: 'bold', 
+    color: '#FFFFFF' 
+  },
+  menuItem: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingVertical: 15 
+  },
+  menuItemText: { 
+    fontSize: 16, 
+    color: '#FFFFFF' 
+  },
+  logoutButton: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    marginTop: 'auto', 
+    paddingVertical: 20, 
+    borderTopWidth: 1, 
+    borderTopColor: 'rgba(255,255,255,0.1)' 
+  },
+  logoutText: { 
+    fontSize: 16, 
+    color: '#FF4D4D', 
+    fontWeight: 'bold' 
+  }
   // PRUEBA YAHIR 2026/19/05
 });
