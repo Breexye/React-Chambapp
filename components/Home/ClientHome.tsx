@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useClientHome } from '@/hooks/use-ClienteHome';
-import { stylesHome } from '@/constants/stylesHome';
 import { Colors } from '@/constants/colors';
+import { stylesHome } from '@/constants/stylesHome';
+import { useClientHome } from '@/hooks/use-ClienteHome';
+import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { ActivityIndicator, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 // Datos de oficios populares
 const POPULAR_TRADES = [
@@ -114,8 +114,12 @@ export default function ClientHome() {
   };
 
   return (
-    <View style={stylesHome.clientMainLayout}>
-      {/* 1. SECCIÓN BUSCADOR */}
+    <ScrollView 
+      contentContainerStyle={stylesHome.clientMainLayout} 
+      showsVerticalScrollIndicator={false}
+      style={{ flex: 1, backgroundColor: '#F8FAFC' }}
+    >
+      {/* SECCIÓN BUSCADOR */}
       <View style={stylesHome.searchHeroBackground}>
         <View style={stylesHome.searchBarContainer}>
           <Ionicons name="search-outline" size={20} color="#94A3B8" style={{ marginLeft: 12 }} />
@@ -132,7 +136,7 @@ export default function ClientHome() {
         </View>
       </View>
 
-      {/* 2. SECCIÓN OFICIOS POPULARES */}
+      {/* SECCIÓN OFICIOS POPULARES */}
       <View style={stylesHome.tradesSection}>
         <Text style={stylesHome.tradesTitle}>Oficios Populares</Text>
         <View style={stylesHome.tradesGrid}>
@@ -148,7 +152,7 @@ export default function ClientHome() {
         </View>
       </View>
 
-      {/* 3. SECCIÓN DEL MAPA */}
+      {/* SECCIÓN DEL MAPA */}
       <View style={stylesHome.mapSection}>
         <View style={stylesHome.mapContainer}>
           {loadingLocation ? (
@@ -194,6 +198,6 @@ export default function ClientHome() {
           )}
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }

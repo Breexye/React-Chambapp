@@ -1,5 +1,5 @@
-import { StyleSheet, Dimensions, Platform } from 'react-native';
 import { Colors } from '@/constants/colors';
+import { Dimensions, Platform, StyleSheet } from 'react-native';
 
 const { width } = Dimensions.get('window');
 export const isWebOrTablet = Platform.OS === 'web' || width > 768;
@@ -69,6 +69,7 @@ export const stylesHome = StyleSheet.create({
   searchHeroBackground: {
     backgroundColor: 'transparent',
     paddingVertical: 10,
+    paddingHorizontal: 20,
   },
   searchBarContainer: {
     flexDirection: 'row',
@@ -238,7 +239,7 @@ export const stylesHome = StyleSheet.create({
 
   // ESTRUCTURA DEL MODO CLIENTE Y MAPA
   clientMainLayout: {
-    flex: 1,
+    paddingBottom: 40,
   },
   mapSection: {
     paddingHorizontal: 20,
