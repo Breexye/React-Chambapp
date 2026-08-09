@@ -28,7 +28,7 @@ const dataFromDb = {
       "calificacion": 4.8,
       "resenas": 19,
       "disponible": true,
-      "descripcion": "Cortocorticuitos, cableado residencial, instalación de centros de carga y luminarias inteligentes.",
+      "descripcion": "Cortocircuitos, cableado residencial, instalación de centros de carga y luminarias inteligentes.",
       "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150"
     }
   ]
@@ -85,8 +85,8 @@ export default function HomeScreen() {
 
   if (currentRole === 'landing') {
     return (
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
+      <ScrollView style={styles.landingContainer} showsVerticalScrollIndicator={false}>
+        <View style={styles.landingHeader}>
           <View style={styles.topRow}>
             <View style={styles.logoContainer}>
               <Ionicons name="briefcase" size={24} color="#FFFFFF" />
@@ -106,28 +106,30 @@ export default function HomeScreen() {
             <ThemedText style={styles.greeting}>Encuentra tu chamba</ThemedText>
             <ThemedText style={styles.subGreeting}>Trabajadores expertos cerca de ti</ThemedText>
 
-            <View style={styles.searchContainer}>
-              <Ionicons name="search-outline" size={20} color="#9CA3AF" />
-              <TextInput 
-                placeholder="Buscar plomero, electricista..." 
-                placeholderTextColor="#9CA3AF"
-                style={styles.searchInput}
-                value={searchQuery}
-                onChangeText={(txt) => {
-                  setSearchQuery(txt);
-                  if(txt === '') setFilteredWorkers([]);
-                }}
-              />
-              <TouchableOpacity style={styles.searchButton} onPress={() => executeSearch(searchQuery)}>
-                <ThemedText style={styles.searchButtonText}>Buscar</ThemedText>
-              </TouchableOpacity>
+            <View style={styles.searchHeroBackground}>
+              <View style={styles.searchBarContainer}>
+                <Ionicons name="search-outline" size={20} color="#9CA3AF" style={{ marginLeft: 8 }} />
+                <TextInput 
+                  placeholder="Buscar plomero, electricista..." 
+                  placeholderTextColor="#9CA3AF"
+                  style={styles.searchInput}
+                  value={searchQuery}
+                  onChangeText={(txt) => {
+                    setSearchQuery(txt);
+                    if(txt === '') setFilteredWorkers([]);
+                  }}
+                />
+                <TouchableOpacity style={styles.searchButton} onPress={() => executeSearch(searchQuery)}>
+                  <ThemedText style={styles.searchButtonText}>Buscar</ThemedText>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </View>
 
         {filteredWorkers.length > 0 ? (
-          <View style={[styles.section, styles.resultsSection]}>
-            <ThemedText style={styles.sectionTitle}>Resultados para "{searchQuery}"</ThemedText>
+          <View style={styles.tradesSection}>
+            <ThemedText style={styles.tradesTitle}>Resultados para "{searchQuery}"</ThemedText>
             {filteredWorkers.map((worker) => (
               <WorkerCard 
                 key={worker.id} 
@@ -137,41 +139,39 @@ export default function HomeScreen() {
             ))}
           </View>
         ) : (
-          <View style={styles.section}>
-            <ThemedText style={styles.sectionTitle}>Oficios Populares</ThemedText>
-            <View style={styles.grid}>
+          <View style={styles.tradesSection}>
+            <ThemedText style={styles.tradesTitle}>Oficios Populares</ThemedText>
+            <View style={styles.tradesGrid}>
               {[
                 { label: 'Plomería', icon: 'water-outline', jobs: '1 trabajos' },
                 { label: 'Electricista', icon: 'flash-outline', jobs: '1 trabajos' },
                 { label: 'Carpintería', icon: 'hammer-outline', jobs: '0 trabajos' },
-                { label: 'Pintura', icon: 'brush-outline', jobs: '0 trabajos' },
+                { label: 'Pintura', icon: 'color-palette-outline', jobs: '0 trabajos' },
                 { label: 'Albañilería', icon: 'construct-outline', jobs: '0 trabajos' },
                 { label: 'Jardinería', icon: 'leaf-outline', jobs: '0 trabajos' },
-                { label: 'Limpieza', icon: 'sparkles-outline', jobs: '0 trabajos' },
-                { label: 'Mecánica', icon: 'settings-outline', jobs: '0 trabajos' },
               ].map((item, idx) => (
                 <TouchableOpacity 
                   key={idx} 
-                  style={styles.oficioCard}
+                  style={styles.tradeCard}
                   onPress={() => executeSearch(item.label)}
                   activeOpacity={0.7}
                 >
-                  <View style={styles.oficioIconCircle}>
+                  <View style={styles.tradeIconContainer}>
                     <Ionicons name={item.icon as any} size={24} color="#00B4D8" />
                   </View>
-                  <ThemedText style={styles.oficioLabel}>{item.label}</ThemedText>
-                  <ThemedText style={styles.oficioJobs}>{item.jobs}</ThemedText>
+                  <ThemedText style={styles.tradeName}>{item.label}</ThemedText>
+                  <ThemedText style={styles.tradeCount}>{item.jobs}</ThemedText>
                 </TouchableOpacity>
               ))}
             </View>
           </View>
         )}
 
-        <View style={{ paddingHorizontal: styles.section.paddingHorizontal }}>
-          <View style={styles.workerCard}>
+        <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
+          <View style={styles.workerPromoCard}>
             <Ionicons name="construct-outline" size={40} color="#FFFFFF" />
-            <ThemedText style={styles.workerTitle}>¿Eres Trabajador?</ThemedText>
-            <ThemedText style={styles.workerSubtitle}>Únete y conecta con miles de clientes</ThemedText>
+            <ThemedText style={styles.workerPromoTitle}>¿Eres Trabajador?</ThemedText>
+            <ThemedText style={styles.workerPromoSubtitle}>Únete y conecta con miles de clientes</ThemedText>
             <TouchableOpacity style={styles.workerRegisterButton} onPress={() => router.push('/register')}>
               <ThemedText style={styles.workerRegisterText}>Regístrate Gratis</ThemedText>
             </TouchableOpacity>
