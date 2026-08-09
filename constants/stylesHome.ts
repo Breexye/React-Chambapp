@@ -1,310 +1,391 @@
-import { Dimensions, StyleSheet } from 'react-native';
-import { Colors } from './colors'; 
+import { StyleSheet, Dimensions, Platform } from 'react-native';
+import { Colors } from '@/constants/colors';
 
 const { width } = Dimensions.get('window');
-const isWebOrTablet = width > 768;
+export const isWebOrTablet = Platform.OS === 'web' || width > 768;
 
 export const stylesHome = StyleSheet.create({
-  container: {
+  // LANDING PAGE & ESTILOS GENERALES
+  landingContainer: {
     flex: 1,
-    backgroundColor: Colors.light.background,
-    width: '100%',
+    backgroundColor: '#FFFFFF',
   },
-  header: {
-    backgroundColor: Colors.light.primary,
-    width: '100%', 
-    paddingHorizontal: isWebOrTablet ? '8%' : 20, 
-    paddingTop: isWebOrTablet ? 30 : 50, 
-    paddingBottom: 50,
-    borderBottomLeftRadius: isWebOrTablet ? 0 : 32, 
-    borderBottomRightRadius: isWebOrTablet ? 0 : 32,
+  landingHeader: {
+    backgroundColor: '#0077B6',
+    paddingTop: 50,
+    paddingBottom: 20,
   },
   topRow: {
     flexDirection: 'row',
-    width: '100%',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 40,
+    paddingHorizontal: 20,
   },
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
   brandName: {
-    color: 'white',
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
+    color: '#FFFFFF',
   },
   authContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 24,
+    gap: 15,
   },
   loginText: {
-    color: 'white',
-    fontSize: 16,
+    color: '#FFFFFF',
     fontWeight: '600',
   },
   registerButton: {
-    backgroundColor: Colors.light.secondary,
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 25,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
   },
   registerButtonText: {
-    color: 'white',
-    fontSize: 15,
+    color: '#0077B6',
     fontWeight: 'bold',
   },
   headerContent: {
-    width: '100%',
+    paddingHorizontal: 20,
+    marginTop: 20,
   },
   greeting: {
-    color: 'white',
-    fontSize: isWebOrTablet ? 42 : 26,
+    fontSize: 24,
     fontWeight: 'bold',
+    color: '#FFFFFF',
   },
   subGreeting: {
-    color: '#CAF0F8', 
-    fontSize: isWebOrTablet ? 18 : 15,
-    marginBottom: 30,
+    fontSize: 14,
+    color: '#E0F2FE',
+    marginBottom: 15,
   },
-  searchContainer: {
+
+  // BUSCADOR
+  searchHeroBackground: {
+    backgroundColor: 'transparent',
+    paddingVertical: 10,
+  },
+  searchBarContainer: {
     flexDirection: 'row',
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 10,
     alignItems: 'center',
-    width: isWebOrTablet ? '40%' : '100%', 
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 6,
+    elevation: 3,
   },
   searchInput: {
     flex: 1,
-    paddingLeft: 12,
-    fontSize: 16,
-    color: Colors.light.secondary,
+    height: 40,
+    paddingHorizontal: 10,
+    fontSize: 14,
+    color: '#1E293B',
   },
   searchButton: {
-    backgroundColor: Colors.light.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
+    backgroundColor: '#0088CC',
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 8,
   },
   searchButtonText: {
-    color: 'white',
+    color: '#FFFFFF',
     fontWeight: 'bold',
-    fontSize: 15,
   },
-  section: {
-    paddingHorizontal: isWebOrTablet ? '8%' : 20,
-    paddingVertical: 50,
-    backgroundColor: 'transparent',
-    width: '100%',
+
+  // OFICIOS POPULARES
+  tradesSection: {
+    paddingHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 20,
   },
-  sectionTitle: {
-    fontSize: isWebOrTablet ? 24 : 18,
+  tradesTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 32,
-    color: Colors.light.secondary,
+    color: '#0F172A',
+    marginBottom: 15,
   },
-  grid: {
+  tradesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between', 
-    width: '100%',
+    justifyContent: 'space-between',
+    gap: 10,
   },
-  oficioCard: { 
-    width: isWebOrTablet ? '11%' : '30%', 
-    backgroundColor: '#F8FAFC', 
-    paddingVertical: 15, 
-    alignItems: 'center', 
-    borderRadius: 12, 
-    marginBottom: 15, 
-    borderWidth: 1, 
+  tradeCard: {
+    width: '30%',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    borderWidth: 1,
     borderColor: '#E2E8F0',
-  },
-  oficioIconCircle: { 
-    width: 45, 
-    height: 45, 
-    borderRadius: 22.5, 
-    backgroundColor: '#E0F7FA', 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    marginBottom: 8 
-  },
-  oficioLabel: { 
-    fontSize: 11, 
-    fontWeight: 'bold', 
-    color: '#334155', 
-    textAlign: 'center' 
-  },
-  oficioJobs: { 
-    fontSize: 9, 
-    color: '#94A3B8', 
-    marginTop: 2, 
-    textAlign: 'center' 
-  },
-  workerCard: {
-    backgroundColor: Colors.light.primary,
-    borderRadius: 24,
-    padding: 40,
+    paddingVertical: 14,
+    paddingHorizontal: 6,
     alignItems: 'center',
+    marginBottom: 8,
+  },
+  tradeIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#E0F2FE',
     justifyContent: 'center',
-    marginTop: 60,
-    marginBottom: 20,
-    width: '100%',
+    alignItems: 'center',
+    marginBottom: 8,
   },
-  workerTitle: {
-    color: 'white',
-    fontSize: isWebOrTablet ? 28 : 22,
+  tradeName: {
+    fontSize: 12,
     fontWeight: 'bold',
-    marginTop: 16,
+    color: '#1E293B',
+    textAlign: 'center',
   },
-  workerSubtitle: {
-    color: '#CAF0F8',
-    fontSize: isWebOrTablet ? 16 : 14,
+  tradeCount: {
+    fontSize: 10,
+    color: '#94A3B8',
+    marginTop: 2,
+  },
+
+  // PROMO TRABAJADOR
+  workerPromoCard: {
+    backgroundColor: '#0077B6',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+  },
+  workerPromoTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
     marginTop: 8,
-    marginBottom: 24,
+  },
+  workerPromoSubtitle: {
+    fontSize: 12,
+    color: '#E0F2FE',
+    marginBottom: 15,
     textAlign: 'center',
   },
   workerRegisterButton: {
-    backgroundColor: 'white',
-    paddingVertical: 14,
-    paddingHorizontal: 40,
-    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
   },
   workerRegisterText: {
-    color: Colors.light.primary,
+    color: '#0077B6',
     fontWeight: 'bold',
-    fontSize: 16,
   },
+
+  // FOOTER
   footer: {
-    backgroundColor: Colors.light.secondary,
-    width: '100%',
-    paddingVertical: 50,
-    paddingHorizontal: 20,
+    backgroundColor: '#0F172A',
+    padding: 25,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 60,
   },
   footerLogoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 16,
+    gap: 8,
+    marginBottom: 6,
   },
   footerBrandName: {
-    color: 'white',
-    fontSize: 20,
+    color: '#FFFFFF',
+    fontSize: 18,
     fontWeight: 'bold',
   },
   footerText: {
-    color: '#90E0EF',
-    fontSize: 14,
-    marginBottom: 8,
+    color: '#94A3B8',
+    fontSize: 12,
+    marginBottom: 12,
   },
   footerCopyright: {
-    color: '#48CAE4',
+    color: '#64748B',
+    fontSize: 10,
+  },
+
+  // MODO APP LOGUEADO
+  appContainer: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+  },
+  globalHeaderTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#0077B6',
+    paddingTop: 45,
+    paddingBottom: 12,
+    paddingHorizontal: 20,
+  },
+  headerIconBtn: {
+    padding: 4,
+  },
+  globalHeaderLogo: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  globalWelcomeRow: {
+    backgroundColor: '#0077B6',
+    paddingHorizontal: 20,
+    paddingBottom: 15,
+  },
+  globalWelcomeText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+
+  // ESTRUCTURA DEL MODO CLIENTE Y MAPA
+  clientMainLayout: {
+    flex: 1,
+  },
+  mapSection: {
+    paddingHorizontal: 20,
+    marginTop: 15,
+    marginBottom: 20,
+  },
+  mapContainer: {
+    height: isWebOrTablet ? 450 : 350,
+    width: '100%',
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    position: 'relative',
+  },
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+
+  // TARJETA TRABAJADOR EN EL MAPA
+  calloutCard: {
+    position: 'absolute',
+    bottom: 12,
+    left: 12,
+    right: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    elevation: 5,
+  },
+  calloutAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.light.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  calloutAvatarText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  calloutInfo: {
+    flex: 1,
+  },
+  calloutName: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#0F172A',
+  },
+  calloutProfession: {
     fontSize: 12,
+    color: '#64748B',
   },
-  resultsSection: { 
-    paddingVertical: 20 
+  calloutBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#E0F2FE',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginTop: 2,
   },
-  appContainer: { 
-    flex: 1, 
-    backgroundColor: Colors.light.secondary 
+  calloutBadgeText: {
+    fontSize: 10,
+    color: '#0284C7',
+    fontWeight: '600',
   },
-  globalHeaderTopRow: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    paddingHorizontal: 15, 
-    paddingTop: 50, 
-    paddingBottom: 10 
+  calloutButton: {
+    backgroundColor: Colors.light.primary,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
   },
-  headerIconBtn: { 
-    width: 40, 
-    height: 40, 
-    justifyContent: 'center', 
-    alignItems: 'center' 
+  calloutButtonText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: 'bold',
   },
-  globalHeaderLogo: { 
-    fontSize: 20, 
-    fontWeight: 'bold', 
-    color: '#FFFFFF' 
+  closeCalloutBtn: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    backgroundColor: '#EF4444',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  globalWelcomeRow: { 
-    paddingHorizontal: 20, 
-    paddingVertical: 10 
+  closeCalloutText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
-  globalWelcomeText: { 
-    fontSize: 16, 
-    color: '#00B4D8', 
-    fontWeight: '500' 
+
+  // MODAL MENU
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    flexDirection: 'row',
   },
-  modalOverlay: { 
-    flex: 1, 
-    backgroundColor: 'rgba(0, 0, 0, 0.4)' 
+  closeOverlay: {
+    flex: 1,
   },
-  closeOverlay: { 
-    position: 'absolute', 
-    top: 0, 
-    bottom: 0, 
-    left: 0, 
-    right: 0, 
-    zIndex: 1 
+  menuDrawer: {
+    width: '75%',
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    paddingTop: 50,
   },
-  menuDrawer: { 
-    position: 'absolute', 
-    left: 0, 
-    top: 0, 
-    bottom: 0, 
-    zIndex: 2, 
-    width: isWebOrTablet ? 300 : width * 0.7, 
-    height: '100%', 
-    backgroundColor: '#001E36', 
-    paddingTop: 60, 
-    paddingHorizontal: 15, 
-    borderRightWidth: 1, 
-    borderRightColor: 'rgba(255,255,255,0.05)' 
+  menuHeader: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    paddingBottom: 15,
+    marginBottom: 15,
   },
-  menuHeader: { 
-    paddingBottom: 20, 
-    marginBottom: 15, 
-    borderBottomWidth: 1, 
-    borderBottomColor: 'rgba(255,255,255,0.1)' 
+  menuHeaderTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#0F172A',
   },
-  menuHeaderTitle: { 
-    fontSize: 18, 
-    fontWeight: 'bold', 
-    color: '#FFFFFF' 
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
   },
-  menuItem: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    paddingVertical: 15 
+  menuItemText: {
+    fontSize: 15,
+    color: '#334155',
   },
-  menuItemText: { 
-    fontSize: 16, 
-    color: '#FFFFFF' 
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 30,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
   },
-  logoutButton: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    marginTop: 'auto', 
-    paddingVertical: 20, 
-    borderTopWidth: 1, 
-    borderTopColor: 'rgba(255,255,255,0.1)' 
+  logoutText: {
+    color: '#FF4D4D',
+    fontSize: 15,
+    fontWeight: 'bold',
   },
-  logoutText: { 
-    fontSize: 16, 
-    color: '#FF4D4D', 
-    fontWeight: 'bold' 
-  }
-  // PRUEBA YAHIR 2026/19/05
 });
