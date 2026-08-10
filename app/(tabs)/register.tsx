@@ -37,7 +37,7 @@ export default function RegisterScreen() {
         const user = authData.user;
 
         if (user) {
-          // 2. Guardar los datos en la tabla 'users' que creamos en Supabase
+          // 2. Guardar los datos en la tabla 'users' en Supabase
           const { error: dbError } = await supabase.from('users').insert([
             {
               id: user.id,
@@ -54,10 +54,10 @@ export default function RegisterScreen() {
 
         alert("¡Cuenta creada con éxito!");
 
-        // 3. Redireccionar al usuario
+        // 3. Redireccionar al usuario mandando el rol y el nombre real
         router.replace({
-          pathname: '/(tabs)',
-          params: { role: role }
+          pathname: '/',
+          params: { role: role, nombre: name.trim() }
         });
 
       } catch (error: any) {
@@ -145,7 +145,7 @@ export default function RegisterScreen() {
             <View style={stylesRegister.inputContainer}>
               <Ionicons name="call-outline" size={18} color="#9CA3AF" style={stylesRegister.inputIcon} />
               <TextInput 
-                placeholder="555-123-4567" 
+                placeholder="614-123-4567" 
                 testID="input-phone"
                 placeholderTextColor="#9CA3AF" 
                 style={stylesRegister.input} 
@@ -170,7 +170,6 @@ export default function RegisterScreen() {
                 value={password}
                 onChangeText={setPassword}
               />
-              
               <TouchableOpacity onPress={() => setIsPasswordHidden(!isPasswordHidden)}>
                 <Ionicons 
                   name={isPasswordHidden ? "eye-off-outline" : "eye-outline"} 

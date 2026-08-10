@@ -13,7 +13,13 @@ export const stylesHome = StyleSheet.create({
   landingHeader: {
     backgroundColor: '#0077B6',
     paddingTop: 50,
-    paddingBottom: 20,
+    paddingBottom: 25,
+    width: '100%',
+    zIndex: 10,
+  },
+  landingScrollContent: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
   },
   topRow: {
     flexDirection: 'row',
@@ -62,22 +68,27 @@ export const stylesHome = StyleSheet.create({
   subGreeting: {
     fontSize: 14,
     color: '#E0F2FE',
-    marginBottom: 15,
   },
 
   // BUSCADOR
   searchHeroBackground: {
     backgroundColor: 'transparent',
-    paddingVertical: 10,
+    paddingVertical: 15,
     paddingHorizontal: 20,
   },
   searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     padding: 6,
-    elevation: 3,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
   searchInput: {
     flex: 1,
@@ -87,10 +98,10 @@ export const stylesHome = StyleSheet.create({
     color: '#1E293B',
   },
   searchButton: {
-    backgroundColor: '#0088CC',
+    backgroundColor: '#0077B6',
     paddingVertical: 10,
     paddingHorizontal: 18,
-    borderRadius: 8,
+    borderRadius: 10,
   },
   searchButtonText: {
     color: '#FFFFFF',
@@ -100,7 +111,7 @@ export const stylesHome = StyleSheet.create({
   // OFICIOS POPULARES
   tradesSection: {
     paddingHorizontal: 20,
-    marginTop: 20,
+    marginTop: 10,
     marginBottom: 20,
   },
   tradesTitle: {
@@ -388,5 +399,107 @@ export const stylesHome = StyleSheet.create({
     color: '#FF4D4D',
     fontSize: 15,
     fontWeight: 'bold',
+  },
+
+  // NUEVOS ESTILOS PARA WORKER HOME (AGREGADOS)
+  statusCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#ffffff',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  statusInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  statusDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 12,
+  },
+  statusTitle: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+  },
+  statusSubtitle: {
+    fontSize: 12,
+    color: '#7f8c8d',
+    marginTop: 2,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    paddingVertical: 40,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  iconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#e0f7fa',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptyText: {
+    fontSize: 14,
+    color: '#7f8c8d',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginHorizontal: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  statNumber: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+    marginTop: 6,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#7f8c8d',
+    marginTop: 2,
   },
 });

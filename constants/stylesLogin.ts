@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000033', // El azul oscuro que usas de fondo
+    backgroundColor: '#000033', // El azul oscuro de fondo
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -20,6 +20,13 @@ export const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 5,
   },
+  avatarContainer: {
+    alignSelf: 'center',
+    backgroundColor: '#E0F2FE',
+    padding: 12,
+    borderRadius: 50,
+    marginBottom: 15,
+  },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
@@ -29,16 +36,18 @@ export const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: '#00AEEF', // Azul claro de tu logo/texto
+    color: '#00AEEF', // Azul claro
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 25,
   },
-  label: {
+  inputGroup: {
+    marginBottom: 16,
+  },
+  inputLabel: {
     fontSize: 14,
     fontWeight: '600',
     color: '#000033',
     marginBottom: 8,
-    marginTop: 15,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -50,31 +59,36 @@ export const styles = StyleSheet.create({
     backgroundColor: '#FAFAFA',
     height: 50,
   },
+  inputIcon: {
+    marginRight: 8,
+  },
   input: {
     flex: 1,
     height: '100%',
-    marginLeft: 10,
     color: '#333',
+    fontSize: 15,
   },
-  button: {
-    backgroundColor: '#000033', // Botón oscuro como en tu header
+  submitButton: {
+    backgroundColor: '#000033',
     borderRadius: 10,
     height: 50,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 30,
+    marginTop: 20,
   },
-  buttonText: {
+  submitButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
   },
-  linkContainer: {
+  footerLinkText: {
     marginTop: 20,
-    alignItems: 'center',
-  },
-  linkText: {
-    color: '#0066CC',
+    textAlign: 'center',
+    color: '#6B7280',
     fontSize: 14,
-  }
+  },
+  footerLinkBold: {
+    color: '#0077B6',
+    fontWeight: 'bold',
+  },
 });

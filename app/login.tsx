@@ -1,9 +1,12 @@
+import { ThemedText } from '@/components/themed-text';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Text, TextInput, TouchableOpacity, View } from 'react-native';
-// Importamos iconos, puedes usar Ionicons o FontAwesome que vienen con Expo
-import { Ionicons } from '@expo/vector-icons';
+import { Alert, KeyboardAvoidingView, Platform, TextInput, TouchableOpacity, View } from 'react-native';
 import { styles } from '../constants/stylesLogin';
+
+
+import { supabase } from '@/src/supabase';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -11,9 +14,52 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = () => {
-    // aca conexion BD segun el amiko de Yahir
-    console.log('Iniciando sesión:', email, password);
+  const handleLogin = async () => {
+    // Validacion de campos vacios
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Error', 'Por favor ingresa tu correo y contraseña');
+      return;
+    }
+
+    try {
+      console.log('Iniciando sesión con:', email);
+
+      // 1. Autenticar con Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password,
+      });
+
+      if (authError) throw authError;
+
+      const user = authData.user;
+
+      if (user) {
+        // 2. Buscar los datos adicionales del usuario en la tabla 'users'
+        const { data: userData, error: dbError } = await supabase
+          .from('users')
+          .select('name, role')
+          .eq('id', user.id)
+          .single();
+
+        if (dbError) {
+          console.warn("No se pudo obtener el rol de la tabla users, entrando por defecto:", dbError.message);
+        }
+
+        const userRole = userData?.role || 'cliente';
+        const userName = userData?.name || email.split('@')[0];
+
+        // 3. Redirigir al inicio mandando el rol y el nombre real
+        router.replace({
+          pathname: '/',
+          params: { role: userRole, nombre: userName }
+        });
+      }
+
+    } catch (error: any) {
+      console.error("ERROR CRÍTICO EN SUPABASE:", error.message);
+      Alert.alert("Error de Inicio de Sesión", error.message);
+    }
   };
 
   return (
@@ -22,46 +68,59 @@ export default function LoginScreen() {
       style={styles.container}
     >
       <View style={styles.card}>
-        <Text style={styles.title}>¡Bienvenido de nuevo!</Text>
-        <Text style={styles.subtitle}>Ingresa a tu cuenta en ChambApp</Text>
-
-        <Text style={styles.label}>Correo Electrónico</Text>
-        <View style={styles.inputContainer}>
-          <Ionicons name="mail-outline" size={20} color="#999" />
-          <TextInput 
-            style={styles.input} 
-            placeholder="tu@email.com" 
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+        <View style={styles.avatarContainer}>
+          <Ionicons name="person-outline" size={36} color="#0077B6" />
         </View>
 
-        <Text style={styles.label}>Contraseña</Text>
-        <View style={styles.inputContainer}>
-          <Ionicons name="lock-closed-outline" size={20} color="#999" />
-          <TextInput 
-            style={styles.input} 
-            placeholder="••••••••" 
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
-          />
-          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-            <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color="#999" />
-          </TouchableOpacity>
+        <ThemedText style={styles.title}>¡Bienvenido!</ThemedText>
+        <ThemedText style={styles.subtitle}>Inicia sesión en ChambApp</ThemedText>
+
+        <View style={styles.inputGroup}>
+          <ThemedText style={styles.inputLabel}>Correo Electrónico</ThemedText>
+          <View style={styles.inputContainer}>
+            <Ionicons name="mail-outline" size={18} color="#9CA3AF" style={styles.inputIcon} />
+            <TextInput 
+              placeholder="tu@email.com" 
+              placeholderTextColor="#9CA3AF" 
+              style={styles.input} 
+              keyboardType="email-address" 
+              autoCapitalize="none"
+              value={email} 
+              onChangeText={setEmail} 
+            />
+          </View>
         </View>
 
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Entrar</Text>
+        <View style={styles.inputGroup}>
+          <ThemedText style={styles.inputLabel}>Contraseña</ThemedText>
+          <View style={styles.inputContainer}>
+            <Ionicons name="lock-closed-outline" size={18} color="#9CA3AF" style={styles.inputIcon} />
+            <TextInput 
+              placeholder="••••••••" 
+              placeholderTextColor="#9CA3AF" 
+              style={styles.input} 
+              secureTextEntry={!showPassword} 
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <Ionicons 
+                name={showPassword ? "eye-outline" : "eye-off-outline"} 
+                size={20} 
+                color="#9CA3AF" 
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <TouchableOpacity style={styles.submitButton} onPress={handleLogin}>
+          <ThemedText style={styles.submitButtonText}>Iniciar Sesión →</ThemedText>
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.linkContainer} 
-          onPress={() => router.push('/register')}
-        >
-          <Text style={styles.linkText}>¿No tienes cuenta? Regístrate aquí</Text>
+        <TouchableOpacity onPress={() => router.push('/register' as any)}>
+          <ThemedText style={styles.footerLinkText}>
+            ¿No tienes cuenta? <ThemedText style={styles.footerLinkBold}>Regístrate aquí</ThemedText>
+          </ThemedText>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>

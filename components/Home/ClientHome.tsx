@@ -21,7 +21,11 @@ if (Platform.OS !== 'web') {
   NativeMapView = require('react-native-maps');
 }
 
-export default function ClientHome() {
+interface ClientHomeProps {
+  userName?: string;
+}
+
+export default function ClientHome({ userName }: ClientHomeProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const {
@@ -33,6 +37,10 @@ export default function ClientHome() {
     CHIHUAHUA_DEFAULT,
     GEOFENCE_RADIUS_METERS,
   } = useClientHome();
+
+  const handleSelectTrade = (tradeName: string) => {
+    setSearchQuery(tradeName);
+  };
 
   // Renderizado del Mapa Web
   const renderWebMap = () => {
@@ -128,9 +136,10 @@ export default function ClientHome() {
             placeholder="Buscar plomero, electricista..."
             placeholderTextColor="#94A3B8"
             value={searchQuery}
+            onFocus={() => setSearchQuery('')}
             onChangeText={setSearchQuery}
           />
-          <TouchableOpacity style={stylesHome.searchButton}>
+          <TouchableOpacity style={stylesHome.searchButton} onPress={() => {}}>
             <Text style={stylesHome.searchButtonText}>Buscar</Text>
           </TouchableOpacity>
         </View>
@@ -141,7 +150,12 @@ export default function ClientHome() {
         <Text style={stylesHome.tradesTitle}>Oficios Populares</Text>
         <View style={stylesHome.tradesGrid}>
           {POPULAR_TRADES.map((trade) => (
-            <TouchableOpacity key={trade.id} style={stylesHome.tradeCard} activeOpacity={0.7}>
+            <TouchableOpacity 
+              key={trade.id} 
+              style={stylesHome.tradeCard} 
+              activeOpacity={0.7}
+              onPress={() => handleSelectTrade(trade.name)}
+            >
               <View style={stylesHome.tradeIconContainer}>
                 <Ionicons name={trade.icon as any} size={26} color="#0088CC" />
               </View>
@@ -191,12 +205,22 @@ export default function ClientHome() {
                 </View>
               </View>
 
-              <TouchableOpacity style={stylesHome.calloutButton}>
+              <TouchableOpacity style={stylesHome.calloutButton} onPress={() => {}}>
                 <Text style={stylesHome.calloutButtonText}>Ver Perfil</Text>
               </TouchableOpacity>
             </View>
           )}
         </View>
+      </View>
+
+      {/* PIE DE PÁGINA INSTITUCIONAL */}
+      <View style={stylesHome.footer}>
+        <View style={stylesHome.footerLogoRow}>
+          <Ionicons name="briefcase" size={22} color="white" />
+          <Text style={stylesHome.footerBrandName}>ChambApp</Text>
+        </View>
+        <Text style={stylesHome.footerText}>Conectando talento con oportunidades.</Text>
+        <Text style={stylesHome.footerCopyright}>© 2026 ChambApp. Todos los derechos reservados.</Text>
       </View>
     </ScrollView>
   );

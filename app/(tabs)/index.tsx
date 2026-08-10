@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { View, ScrollView, TextInput, TouchableOpacity, Modal } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router'; 
-import { Ionicons } from '@expo/vector-icons';
-import { ThemedText } from '@/components/themed-text';
 import ClientHome from '@/components/Home/ClientHome';
 import WorkerHome from '@/components/Home/WorkerHome';
+import { ThemedText } from '@/components/themed-text';
+import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { Modal, ScrollView, TextInput, TouchableOpacity, View } from 'react-native';
 
+import { Worker, WorkerCard } from '@/components/WorkerCard';
 import { stylesHome as styles } from '@/constants/stylesHome';
-import { WorkerCard, Worker } from '@/components/WorkerCard';
 
 const dataFromDb = {
   "trabajadores": [
@@ -39,6 +39,7 @@ export default function HomeScreen() {
   const router = useRouter();
   
   const [currentRole, setCurrentRole] = useState<'landing' | 'cliente' | 'trabajador'>('landing');
+  const [userName, setUserName] = useState('Usuario');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredWorkers, setFilteredWorkers] = useState<Worker[]>([]);
@@ -47,14 +48,18 @@ export default function HomeScreen() {
     if (params.role === 'cliente' || params.role === 'trabajador') {
       setCurrentRole(params.role);
     }
-  }, [params.role]);
+    if (params.nombre) {
+      setUserName(params.nombre as string);
+    }
+  }, [params.role, params.nombre]);
 
   const handleLogout = () => {
     setIsMenuOpen(false);
     setCurrentRole('landing');
+    setUserName('Usuario');
     setSearchQuery('');
     setFilteredWorkers([]);
-    router.setParams({ role: '' });
+    router.setParams({ role: '', nombre: '' });
   };
 
   const executeSearch = (text: string) => {
@@ -67,6 +72,10 @@ export default function HomeScreen() {
       );
       setFilteredWorkers(results as Worker[]);
     }
+  };
+
+  const handleViewProfileProtected = () => {
+    router.push('/login');
   };
 
   const menuItems = currentRole === 'cliente' 
@@ -85,7 +94,8 @@ export default function HomeScreen() {
 
   if (currentRole === 'landing') {
     return (
-      <ScrollView style={styles.landingContainer} showsVerticalScrollIndicator={false}>
+      <View style={styles.landingContainer}>
+        {/* CUADRO AZUL SUPERIOR FIJO */}
         <View style={styles.landingHeader}>
           <View style={styles.topRow}>
             <View style={styles.logoContainer}>
@@ -105,91 +115,99 @@ export default function HomeScreen() {
           <View style={styles.headerContent}>
             <ThemedText style={styles.greeting}>Encuentra tu chamba</ThemedText>
             <ThemedText style={styles.subGreeting}>Trabajadores expertos cerca de ti</ThemedText>
-
-            <View style={styles.searchHeroBackground}>
-              <View style={styles.searchBarContainer}>
-                <Ionicons name="search-outline" size={20} color="#9CA3AF" style={{ marginLeft: 8 }} />
-                <TextInput 
-                  placeholder="Buscar plomero, electricista..." 
-                  placeholderTextColor="#9CA3AF"
-                  style={styles.searchInput}
-                  value={searchQuery}
-                  onChangeText={(txt) => {
-                    setSearchQuery(txt);
-                    if(txt === '') setFilteredWorkers([]);
-                  }}
-                />
-                <TouchableOpacity style={styles.searchButton} onPress={() => executeSearch(searchQuery)}>
-                  <ThemedText style={styles.searchButtonText}>Buscar</ThemedText>
-                </TouchableOpacity>
-              </View>
-            </View>
           </View>
         </View>
 
-        {filteredWorkers.length > 0 ? (
-          <View style={styles.tradesSection}>
-            <ThemedText style={styles.tradesTitle}>Resultados para "{searchQuery}"</ThemedText>
-            {filteredWorkers.map((worker) => (
-              <WorkerCard 
-                key={worker.id} 
-                worker={worker} 
-                onPress={() => console.log(`Abriendo perfil de ${worker.nombre}`)} 
+        {/* CONTENIDO BLANCO CON SCROLL */}
+        <ScrollView style={styles.landingScrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.searchHeroBackground}>
+            <View style={styles.searchBarContainer}>
+              <Ionicons name="search-outline" size={20} color="#94A3B8" style={{ marginLeft: 8 }} />
+              <TextInput 
+                placeholder="Buscar plomero, electricista..." 
+                placeholderTextColor="#94A3B8"
+                style={styles.searchInput}
+                value={searchQuery}
+                onFocus={() => {
+                  setSearchQuery('');
+                  setFilteredWorkers([]);
+                }}
+                onChangeText={(txt) => {
+                  setSearchQuery(txt);
+                  if(txt === '') setFilteredWorkers([]);
+                }}
               />
-            ))}
+              <TouchableOpacity style={styles.searchButton} onPress={() => executeSearch(searchQuery)}>
+                <ThemedText style={styles.searchButtonText}>Buscar</ThemedText>
+              </TouchableOpacity>
+            </View>
           </View>
-        ) : (
-          <View style={styles.tradesSection}>
-            <ThemedText style={styles.tradesTitle}>Oficios Populares</ThemedText>
-            <View style={styles.tradesGrid}>
-              {[
-                { label: 'Plomería', icon: 'water-outline', jobs: '1 trabajos' },
-                { label: 'Electricista', icon: 'flash-outline', jobs: '1 trabajos' },
-                { label: 'Carpintería', icon: 'hammer-outline', jobs: '0 trabajos' },
-                { label: 'Pintura', icon: 'color-palette-outline', jobs: '0 trabajos' },
-                { label: 'Albañilería', icon: 'construct-outline', jobs: '0 trabajos' },
-                { label: 'Jardinería', icon: 'leaf-outline', jobs: '0 trabajos' },
-              ].map((item, idx) => (
-                <TouchableOpacity 
-                  key={idx} 
-                  style={styles.tradeCard}
-                  onPress={() => executeSearch(item.label)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.tradeIconContainer}>
-                    <Ionicons name={item.icon as any} size={24} color="#00B4D8" />
-                  </View>
-                  <ThemedText style={styles.tradeName}>{item.label}</ThemedText>
-                  <ThemedText style={styles.tradeCount}>{item.jobs}</ThemedText>
-                </TouchableOpacity>
+
+          {filteredWorkers.length > 0 ? (
+            <View style={styles.tradesSection}>
+              <ThemedText style={styles.tradesTitle}>Resultados para "{searchQuery}"</ThemedText>
+              {filteredWorkers.map((worker) => (
+                <WorkerCard 
+                  key={worker.id} 
+                  worker={worker} 
+                  onPress={handleViewProfileProtected} 
+                />
               ))}
             </View>
-          </View>
-        )}
+          ) : (
+            <View style={styles.tradesSection}>
+              <ThemedText style={styles.tradesTitle}>Oficios Populares</ThemedText>
+              <View style={styles.tradesGrid}>
+                {[
+                  { label: 'Plomería', icon: 'water-outline', jobs: '1 trabajos' },
+                  { label: 'Electricista', icon: 'flash-outline', jobs: '1 trabajos' },
+                  { label: 'Carpintería', icon: 'hammer-outline', jobs: '0 trabajos' },
+                  { label: 'Pintura', icon: 'color-palette-outline', jobs: '0 trabajos' },
+                  { label: 'Albañilería', icon: 'construct-outline', jobs: '0 trabajos' },
+                  { label: 'Jardinería', icon: 'leaf-outline', jobs: '0 trabajos' },
+                ].map((item, idx) => (
+                  <TouchableOpacity 
+                    key={idx} 
+                    style={styles.tradeCard}
+                    onPress={() => executeSearch(item.label)} 
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.tradeIconContainer}>
+                      <Ionicons name={item.icon as any} size={24} color="#00B4D8" />
+                    </View>
+                    <ThemedText style={styles.tradeName}>{item.label}</ThemedText>
+                    <ThemedText style={styles.tradeCount}>{item.jobs}</ThemedText>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
 
-        <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
-          <View style={styles.workerPromoCard}>
-            <Ionicons name="construct-outline" size={40} color="#FFFFFF" />
-            <ThemedText style={styles.workerPromoTitle}>¿Eres Trabajador?</ThemedText>
-            <ThemedText style={styles.workerPromoSubtitle}>Únete y conecta con miles de clientes</ThemedText>
-            <TouchableOpacity style={styles.workerRegisterButton} onPress={() => router.push('/register')}>
-              <ThemedText style={styles.workerRegisterText}>Regístrate Gratis</ThemedText>
-            </TouchableOpacity>
+          <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
+            <View style={styles.workerPromoCard}>
+              <Ionicons name="construct-outline" size={40} color="#FFFFFF" />
+              <ThemedText style={styles.workerPromoTitle}>¿Eres Trabajador?</ThemedText>
+              <ThemedText style={styles.workerPromoSubtitle}>Únete y conecta con miles de clientes</ThemedText>
+              <TouchableOpacity style={styles.workerRegisterButton} onPress={() => router.push('/register')}>
+                <ThemedText style={styles.workerRegisterText}>Regístrate Gratis</ThemedText>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
 
-        <View style={styles.footer}>
-          <View style={styles.footerLogoRow}>
-            <Ionicons name="briefcase" size={22} color="white" />
-            <ThemedText style={styles.footerBrandName}>ChambApp</ThemedText>
+          <View style={styles.footer}>
+            <View style={styles.footerLogoRow}>
+              <Ionicons name="briefcase" size={22} color="white" />
+              <ThemedText style={styles.footerBrandName}>ChambApp</ThemedText>
+            </View>
+            <ThemedText style={styles.footerText}>Conectando talento con oportunidades.</ThemedText>
+            <ThemedText style={styles.footerCopyright}>© 2026 ChambApp. Todos los derechos reservados.</ThemedText>
           </View>
-          <ThemedText style={styles.footerText}>Conectando talento con oportunidades.</ThemedText>
-          <ThemedText style={styles.footerCopyright}>© 2026 ChambApp. Todos los derechos reservados.</ThemedText>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </View>
     );
   }
 
+  // MODO USUARIO LOGUEADO (CLIENTE O TRABAJADOR)
   return (
     <View style={styles.appContainer}>
       <View style={styles.globalHeaderTopRow}>
@@ -205,10 +223,10 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.globalWelcomeRow}>
-        <ThemedText style={styles.globalWelcomeText}>¡Bienvenido, Usuario!</ThemedText>
+        <ThemedText style={styles.globalWelcomeText}>¡Bienvenido, {userName}!</ThemedText>
       </View>
 
-      {currentRole === 'cliente' ? <ClientHome /> : <WorkerHome />}
+      {currentRole === 'cliente' ? <ClientHome userName={userName} /> : <WorkerHome />}
 
       <Modal transparent={true} visible={isMenuOpen} animationType="fade" onRequestClose={() => setIsMenuOpen(false)}>
         <View style={styles.modalOverlay}>
@@ -222,7 +240,26 @@ export default function HomeScreen() {
             </View>
 
             {menuItems.map((item) => (
-              <TouchableOpacity key={item.id} style={styles.menuItem} onPress={() => setIsMenuOpen(false)}>
+              <TouchableOpacity 
+                key={item.id} 
+                style={styles.menuItem} 
+                onPress={() => {
+                  setIsMenuOpen(false);
+
+                  // MODIFICA AQUÍ LAS RUTAS SEGÚN LAS PANTALLAS CORRESPONDIENTES
+                  if (item.id === 'perfil' || item.id === 'perfil-w') {
+                    router.push('/profile' as any);
+                  } else if (item.id === 'chats' || item.id === 'chats-w') {
+                    router.push('/chats' as any);
+                  } else if (item.id === 'favoritos') {
+                    router.push('/favorites' as any);
+                  } else if (item.id === 'historias' || item.id === 'historial-w') {
+                    router.push('/history' as any);
+                  } else if (item.id === 'calificaciones') {
+                    router.push('/ratings' as any);
+                  }
+                }}
+              >
                 <Ionicons name={item.icon} size={22} color="#00B4D8" style={{ marginRight: 15 }} />
                 <ThemedText style={styles.menuItemText}>{item.title}</ThemedText>
               </TouchableOpacity>
