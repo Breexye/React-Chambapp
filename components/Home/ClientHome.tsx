@@ -5,7 +5,6 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { ActivityIndicator, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-// Datos de oficios populares
 const POPULAR_TRADES = [
   { id: '1', name: 'Plomería', count: '1 trabajos', icon: 'water-outline' },
   { id: '2', name: 'Electricista', count: '1 trabajos', icon: 'flash-outline' },
@@ -15,7 +14,6 @@ const POPULAR_TRADES = [
   { id: '6', name: 'Jardinería', count: '0 trabajos', icon: 'leaf-outline' },
 ];
 
-// Importación condicional protegida para móviles
 let NativeMapView: any = null;
 if (Platform.OS !== 'web') {
   NativeMapView = require('react-native-maps');
@@ -42,7 +40,6 @@ export default function ClientHome({ userName }: ClientHomeProps) {
     setSearchQuery(tradeName);
   };
 
-  // Renderizado del Mapa Web
   const renderWebMap = () => {
     const leafletHtml = `
       <!DOCTYPE html>
@@ -81,7 +78,6 @@ export default function ClientHome({ userName }: ClientHomeProps) {
     );
   };
 
-  // Renderizado del Mapa Nativo (Android / iOS)
   const renderNativeMap = () => {
     if (!NativeMapView) return null;
     const MapView = NativeMapView.default || NativeMapView;
@@ -127,6 +123,14 @@ export default function ClientHome({ userName }: ClientHomeProps) {
       showsVerticalScrollIndicator={false}
       style={{ flex: 1, backgroundColor: '#F8FAFC' }}
     >
+      {/* SALUDO DE BIENVENIDA CON EL NOMBRE */}
+      <View style={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 5 }}>
+        <Text style={{ fontSize: 14, color: '#64748B' }}>Bienvenido de nuevo,</Text>
+        <Text style={{ fontSize: 22, fontWeight: 'bold', color: '#03045E' }}>
+          {userName || 'Cliente'} 
+        </Text>
+      </View>
+
       {/* SECCIÓN BUSCADOR */}
       <View style={stylesHome.searchHeroBackground}>
         <View style={stylesHome.searchBarContainer}>
@@ -177,7 +181,6 @@ export default function ClientHome({ userName }: ClientHomeProps) {
             renderNativeMap()
           )}
 
-          {/* TARJETA FLOTANTE DE VISTA PREVIA DEL TRABAJADOR */}
           {selectedWorker && (
             <View style={stylesHome.calloutCard}>
               <TouchableOpacity
@@ -213,10 +216,10 @@ export default function ClientHome({ userName }: ClientHomeProps) {
         </View>
       </View>
 
-      {/* PIE DE PÁGINA INSTITUCIONAL */}
+      {/* PIE DE PÁGINA */}
       <View style={stylesHome.footer}>
         <View style={stylesHome.footerLogoRow}>
-          <Ionicons name="briefcase" size={22} color="white" />
+          <Ionicons name="briefcase" size22 color="white" />
           <Text style={stylesHome.footerBrandName}>ChambApp</Text>
         </View>
         <Text style={stylesHome.footerText}>Conectando talento con oportunidades.</Text>

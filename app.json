@@ -9,7 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "La aplicación necesita acceder a la cámara para tomar las fotografías de tu INE y de tu perfil profesional.",
+        "NSPhotoLibraryUsageDescription": "La aplicación necesita acceder a tu galería para seleccionar las imágenes requeridas."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +23,12 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "output": "static",
@@ -37,6 +46,13 @@
           "dark": {
             "backgroundColor": "#000000"
           }
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "La app necesita acceder a tus fotos para establecer tu imagen.",
+          "cameraPermission": "La app necesita acceder a tu cámara para tomar la fotografía de tu INE y perfil."
         }
       ]
     ],
