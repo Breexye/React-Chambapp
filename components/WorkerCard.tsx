@@ -3,13 +3,13 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export interface Worker {
   id: string;
-  nombre: string;
-  oficio: string;
+  name: string;
+  job_title: string;
   calificacion: number;
   resenas: number;
   disponible: boolean;
-  descripcion: string;
-  avatar: string;
+  job_description: string;
+  profile_image: string;
 }
 
 interface WorkerCardProps {
@@ -21,25 +21,31 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({ worker, onPress }) => {
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
       <View style={styles.row}>
-        <Image source={{ uri: worker.avatar }} style={styles.avatar} />
+        <Image 
+          source={{ uri: worker.profile_image || 'https://via.placeholder.com/150' }} 
+          style={styles.avatar} 
+        />
         <View style={styles.infoContainer}>
-          <View style={styles.headerRow}>
-            <Text style={styles.nombre}>{worker.nombre}</Text>
+          <Text style={styles.nombre}>{worker.name}</Text>
+          <Text style={styles.oficio}>{worker.job_title}</Text>
+
+          <View style={styles.detailsRow}>
+            <Text style={styles.rating}>
+              ⭐ {worker.calificacion} <Text style={styles.resenas}>({worker.resenas} reseñas)</Text>
+            </Text>
             {worker.disponible && (
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>Disponible</Text>
               </View>
             )}
           </View>
-          <Text style={styles.oficio}>{worker.oficio}</Text>
-          <Text style={styles.rating}>
-            ⭐ {worker.calificacion} <Text style={styles.resenas}>({worker.resenas} reseñas)</Text>
-          </Text>
         </View>
       </View>
+
       <Text style={styles.descripcion} numberOfLines={2}>
-        {worker.descripcion}
+        {worker.job_description || 'Sin descripción disponible.'}
       </Text>
+
       <View style={styles.buttonContainer}>
         <View style={styles.btnSecundario}>
           <Text style={styles.btnTextSecundario}>Ver perfil</Text>
@@ -79,27 +85,28 @@ const styles = StyleSheet.create({
     paddingLeft: 14,
     justifyContent: 'center',
   },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
   nombre: {
     fontSize: 16,
     fontWeight: '700',
     color: '#0A1931',
+    marginBottom: 2,
   },
   oficio: {
     fontSize: 14,
     color: '#0085FF',
     fontWeight: '500',
+    marginBottom: 4,
+  },
+  detailsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginTop: 2,
   },
   rating: {
     fontSize: 13,
     fontWeight: '600',
     color: '#333',
-    marginTop: 4,
   },
   resenas: {
     fontWeight: '400',
@@ -108,7 +115,7 @@ const styles = StyleSheet.create({
   badge: {
     backgroundColor: '#E8F5E9',
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 3,
     borderRadius: 6,
   },
   badgeText: {

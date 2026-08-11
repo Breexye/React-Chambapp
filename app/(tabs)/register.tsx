@@ -1,5 +1,4 @@
 import { ThemedText } from '@/components/themed-text';
-import { stylesRegister } from '@/constants/stylesRegister';
 import { useFormValidation } from '@/hooks/use-register-validation';
 import { supabase } from '@/src/supabase';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,10 +6,18 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  Alert, Image, KeyboardAvoidingView, Modal, Platform,
-  ScrollView, TextInput, TouchableOpacity, View
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { stylesRegister } from '../../constants/stylesRegister';
 
 // Lista predefinida de oficios
 const SPECIALTIES_LIST = [
@@ -39,27 +46,27 @@ export default function RegisterScreen() {
   const { errors } = useFormValidation();
   const [role, setRole] = useState<'cliente' | 'trabajador'>('cliente');
   const [isPasswordHidden, setIsPasswordHidden] = useState(true);
-
+  
   // Campos comunes
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-
+  
   // Campos exclusivos para trabajador
   const [jobTitle, setJobTitle] = useState('');
   const [jobDescription, setJobDescription] = useState('');
   const [profileImage, setProfileImage] = useState<string | null>(null);
-
+  
   // Estados para las fotos de la INE
   const [ineFrontImage, setIneFrontImage] = useState<string | null>(null);
   const [ineBackImage, setIneBackImage] = useState<string | null>(null);
-
-  // Modales y Guías
+  
+  // Modales y Guias
   const [activePhotoType, setActivePhotoType] = useState<'profile' | 'ineFront' | 'ineBack' | null>(null);
   const [showPhotoGuideModal, setShowPhotoGuideModal] = useState(false);
   const [showSpecialtiesModal, setShowSpecialtiesModal] = useState(false);
-
+  
   // Estados para especialidad personalizada ("Otro")
   const [showCustomJobModal, setShowCustomJobModal] = useState(false);
   const [customJobInput, setCustomJobInput] = useState('');
@@ -85,7 +92,7 @@ export default function RegisterScreen() {
     }
   };
 
-  // Abrir cámara con guía según el tipo de foto
+  // Abrir cámara con guia según el tipo de foto
   const handleOpenCameraController = (type: 'profile' | 'ineFront' | 'ineBack') => {
     setActivePhotoType(type);
     setShowPhotoGuideModal(true);
@@ -119,7 +126,7 @@ export default function RegisterScreen() {
     }, 300);
   };
 
-  // Función para subir imágenes a Supabase Storage
+  // FUNCIÓN SEGURA DE SUBIDA (Usa blob para evitar archivos de 0 bytes)
   const uploadImageToSupabase = async (uri: string, folder: string, userId: string) => {
     if (!uri) return null;
     try {
@@ -128,13 +135,13 @@ export default function RegisterScreen() {
       const fileExt = uri.split('.').pop() || 'jpg';
       const fileName = `${userId}_${Date.now()}.${fileExt}`;
       const filePath = `${folder}/${fileName}`;
-
       const { error: uploadError } = await supabase.storage
         .from('documents')
-        .upload(filePath, blob, { contentType: `image/${fileExt}` });
-
+        .upload(filePath, blob, {
+          contentType: `image/${fileExt}`,
+          upsert: true
+        });
       if (uploadError) throw uploadError;
-
       const { data } = supabase.storage.from('documents').getPublicUrl(filePath);
       return data.publicUrl;
     } catch (error) {
@@ -149,32 +156,26 @@ export default function RegisterScreen() {
       Alert.alert("Campos incompletos", "Por favor llena todos los campos obligatorios.");
       return;
     }
-
     if (role === 'trabajador' && (!jobTitle.trim() || !ineFrontImage || !ineBackImage || !profileImage)) {
       Alert.alert("Faltan datos de trabajador", "Como trabajador debes seleccionar tu especialidad, subir las fotos de tu INE (frente y reverso) y tu foto de perfil.");
       return;
     }
-
     try {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email.trim(),
         password: password,
       });
-
       if (authError) throw authError;
-
       const user = authData.user;
       if (user) {
         let profileImageUrl = null;
         let ineFrontUrl = null;
         let ineBackUrl = null;
-
         if (role === 'trabajador') {
           if (profileImage) profileImageUrl = await uploadImageToSupabase(profileImage, 'profiles', user.id);
           if (ineFrontImage) ineFrontUrl = await uploadImageToSupabase(ineFrontImage, 'ines', user.id);
           if (ineBackImage) ineBackUrl = await uploadImageToSupabase(ineBackImage, 'ines', user.id);
         }
-
         const userPayload: any = {
           id: user.id,
           name: name.trim(),
@@ -183,7 +184,6 @@ export default function RegisterScreen() {
           role: role,
           created_at: new Date().toISOString()
         };
-
         if (role === 'trabajador') {
           userPayload.job_title = jobTitle.trim();
           userPayload.job_description = jobDescription.trim();
@@ -191,16 +191,14 @@ export default function RegisterScreen() {
           userPayload.ine_front_image = ineFrontUrl;
           userPayload.ine_back_image = ineBackUrl;
         }
-
         const { error: dbError } = await supabase.from('users').insert([userPayload]);
         if (dbError) throw dbError;
+        Alert.alert("¡Cuenta creada con éxito!");
+        router.replace({
+          pathname: '/',
+          params: { role: role, nombre: name.trim() }
+        });
       }
-
-      Alert.alert("¡Cuenta creada con éxito!");
-      router.replace({
-        pathname: '/',
-        params: { role: role, nombre: name.trim() }
-      });
     } catch (error: any) {
       console.error("Error detallado en registro:", error);
       Alert.alert(
@@ -211,9 +209,11 @@ export default function RegisterScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#230077B6' }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#03045E' }} edges={['top']}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={stylesRegister.container}>
-        <ScrollView contentContainerStyle={stylesRegister.scrollContainer} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={stylesRegister.scrollContainer}
+          showsVerticalScrollIndicator={false}>
           
           <TouchableOpacity
             style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15, alignSelf: 'flex-start' }}
@@ -306,7 +306,7 @@ export default function RegisterScreen() {
               <View style={stylesRegister.inputContainer}>
                 <Ionicons name="lock-closed-outline" size={18} color="#9CA3AF" style={stylesRegister.inputIcon} />
                 <TextInput
-                  placeholder="........"
+                  placeholder="••••••••"
                   placeholderTextColor="#9CA3AF"
                   style={stylesRegister.input}
                   secureTextEntry={isPasswordHidden}
@@ -326,7 +326,7 @@ export default function RegisterScreen() {
                 <ThemedText style={{ fontSize: 16, fontWeight: 'bold', color: '#0077B6', marginBottom: 12 }}>
                   Información Profesional y Verificación
                 </ThemedText>
-
+                
                 <View style={{ backgroundColor: '#E0F2FE', borderColor: '#38BDF8', borderWidth: 1.5, borderRadius: 8, padding: 12, marginBottom: 15, flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
                   <Ionicons name="shield-checkmark-outline" size={22} color="#0284C7" style={{ marginTop: 1 }} />
                   <ThemedText style={{ fontSize: 13, color: '#0F172A', flex: 1, lineHeight: 19, fontWeight: '500' }}>
@@ -384,7 +384,7 @@ export default function RegisterScreen() {
                   </View>
                   {ineFrontImage && (
                     <View style={{ alignItems: 'center', marginTop: 8 }}>
-                      <ThemedText style={{ color: 'green', fontSize: 12, marginBottom: 5 }}>✓ Frente de INE cargado</ThemedText>
+                      <ThemedText style={{ color: 'green', fontSize: 12, marginBottom: 5 }}>Frente de INE cargado</ThemedText>
                       <Image source={{ uri: ineFrontImage }} style={{ width: 120, height: 75, borderRadius: 6, borderWidth: 1, borderColor: '#00B4D8' }} />
                     </View>
                   )}
@@ -405,7 +405,7 @@ export default function RegisterScreen() {
                   </View>
                   {ineBackImage && (
                     <View style={{ alignItems: 'center', marginTop: 8 }}>
-                      <ThemedText style={{ color: 'green', fontSize: 12, marginBottom: 5 }}>✓ Reverso de INE cargado</ThemedText>
+                      <ThemedText style={{ color: 'green', fontSize: 12, marginBottom: 5 }}>Reverso de INE cargado</ThemedText>
                       <Image source={{ uri: ineBackImage }} style={{ width: 120, height: 75, borderRadius: 6, borderWidth: 1, borderColor: '#00B4D8' }} />
                     </View>
                   )}
@@ -426,7 +426,7 @@ export default function RegisterScreen() {
                   </View>
                   {profileImage && (
                     <View style={{ alignItems: 'center', marginTop: 10 }}>
-                      <ThemedText style={{ color: 'green', fontSize: 12, marginBottom: 5 }}>✓ Foto cargada correctamente</ThemedText>
+                      <ThemedText style={{ color: 'green', fontSize: 12, marginBottom: 5 }}>Foto cargada correctamente</ThemedText>
                       <Image source={{ uri: profileImage }} style={{ width: 70, height: 70, borderRadius: 35, borderWidth: 2, borderColor: '#0077B6' }} />
                     </View>
                   )}
@@ -444,7 +444,8 @@ export default function RegisterScreen() {
               <View style={stylesRegister.dividerLine} />
             </View>
 
-            <TouchableOpacity onPress={() => router.back()}>
+            {/* CORREGIDO: Redirige explícitamente a /login */}
+            <TouchableOpacity onPress={() => router.push('/login' as any)}>
               <ThemedText style={stylesRegister.footerLinkText}>
                 ¿Ya tienes cuenta? <ThemedText style={stylesRegister.footerLinkBold}>Inicia sesión aquí</ThemedText>
               </ThemedText>

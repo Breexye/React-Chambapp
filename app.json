@@ -12,7 +12,8 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "La aplicación necesita acceder a la cámara para tomar las fotografías de tu INE y de tu perfil profesional.",
-        "NSPhotoLibraryUsageDescription": "La aplicación necesita acceder a tu galería para seleccionar las imágenes requeridas."
+        "NSPhotoLibraryUsageDescription": "La aplicación necesita acceder a tu galería para seleccionar las imágenes requeridas.",
+        "NSAllowsArbitraryLoads": true
       }
     },
     "android": {

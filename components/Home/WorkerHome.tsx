@@ -2,30 +2,27 @@ import { ThemedText } from '@/components/themed-text';
 import { stylesHome } from '@/constants/stylesHome';
 import { supabase } from '@/src/supabase';
 import { Ionicons } from '@expo/vector-icons';
+import { Image as ExpoImage } from 'expo-image';
 import * as Location from 'expo-location';
 import React, { useEffect, useState } from 'react';
-import { Alert, Image, ScrollView, Switch, View } from 'react-native';
+import { Alert, ScrollView, Switch, View } from 'react-native';
 
 export default function WorkerHome() {
   const [isAvailable, setIsAvailable] = useState(true);
   const [loading, setLoading] = useState(true);
   
-  // Datos del trabajador
   const [workerName, setWorkerName] = useState('Cargando...');
   const [jobTitle, setJobTitle] = useState('Especialista');
   const [profileImage, setProfileImage] = useState<string | null>(null);
   
-  // Métricas y reseñas
   const [rating, setRating] = useState(5.0);
   const [totalJobs, setTotalJobs] = useState(0);
   const [reviews, setReviews] = useState<any[]>([]);
 
-  // 1. Cargar datos del perfil del trabajador autenticado al iniciar
   useEffect(() => {
     fetchWorkerData();
   }, []);
 
-  // 2. Manejar la ubicación en tiempo real cuando cambia la disponibilidad
   useEffect(() => {
     let locationSubscription: any = null;
 
@@ -38,11 +35,9 @@ export default function WorkerHome() {
           return;
         }
 
-        // Obtener ubicación actual y actualizar en Supabase
         const currentLocation = await Location.getCurrentPositionAsync({});
         await updateWorkerLocation(currentLocation.coords.latitude, currentLocation.coords.longitude);
 
-        // Opcional: Escuchar cambios de posición en tiempo real si se desplaza
         locationSubscription = await Location.watchPositionAsync(
           { accuracy: Location.Accuracy.Balanced, distanceInterval: 50 },
           (loc) => {
@@ -68,10 +63,9 @@ export default function WorkerHome() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Obtener info de la tabla users
       const { data: userData, error } = await supabase
         .from('users')
-        .select('*')
+        .select('name, job_title, profile_image')
         .eq('id', user.id)
         .single();
 
@@ -80,10 +74,26 @@ export default function WorkerHome() {
       if (userData) {
         setWorkerName(userData.name || 'Trabajador');
         setJobTitle(userData.job_title || 'Profesional Independiente');
-        setProfileImage(userData.profile_image || null);
         
-        setRating(userData.rating || 5.0);
-        setTotalJobs(userData.total_jobs || 0);
+        if (userData.profile_image && userData.profile_image.trim() !== '') {
+          let imagePath = userData.profile_image.trim();
+          
+          if (imagePath.includes('/storage/v1/object/public/documents/')) {
+            imagePath = imagePath.split('/storage/v1/object/public/documents/')[1];
+          } else if (imagePath.includes('/storage/v1/object/sign/')) {
+            const parts = imagePath.split('/storage/v1/object/sign/documents/');
+            if (parts.length > 1) {
+              imagePath = parts[1].split('?')[0];
+            }
+          }
+
+          const { data } = supabase.storage
+            .from('documents')
+            .getPublicUrl(imagePath);
+
+          console.log("URL pública generada por SDK:", data.publicUrl);
+          setProfileImage(data.publicUrl);
+        }
       }
 
     } catch (error: any) {
@@ -126,26 +136,29 @@ export default function WorkerHome() {
     <ScrollView style={stylesHome.landingScrollContent} showsVerticalScrollIndicator={false}>
       <View style={{ padding: 20 }}>
         
-        {/* Cabecera Profesional con Datos a la Izquierda y Foto de Perfil en la parte Superior Derecha */}
+        {/* Cabecera Profesional */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, backgroundColor: '#FFF', padding: 16, borderRadius: 12, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 5, elevation: 2 }}>
-          {/* Información del Trabajador (Nombre y Ocupación) */}
           <View style={{ flex: 1, marginRight: 15 }}>
             <ThemedText style={{ fontSize: 12, color: '#0077B6', fontWeight: '600', textTransform: 'uppercase', marginBottom: 2 }}>Panel de Profesional</ThemedText>
             <ThemedText style={{ fontSize: 18, fontWeight: 'bold', color: '#03045E' }} numberOfLines={1}>{workerName}</ThemedText>
             <ThemedText style={{ fontSize: 13, color: '#64748B', fontWeight: '500', marginTop: 2 }} numberOfLines={1}>{jobTitle}</ThemedText>
           </View>
 
-          {/* Foto de Perfil ubicada en la parte superior derecha */}
-          {profileImage ? (
-            <Image 
-              source={{ uri: profileImage }} 
-              style={{ width: 60, height: 60, borderRadius: 30, borderWidth: 2, borderColor: '#0077B6' }} 
-            />
-          ) : (
-            <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: '#E0F2FE', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#0077B6' }}>
+          {/* Contenedor de la foto de perfil con ExpoImage */}
+          <View style={{ width: 64, height: 64, borderRadius: 32, overflow: 'hidden', borderWidth: 2, borderColor: '#0077B6', backgroundColor: '#E0F2FE', justifyContent: 'center', alignItems: 'center' }}>
+            {profileImage ? (
+              <ExpoImage 
+                source={{ uri: profileImage }} 
+                style={{ width: 64, height: 64, borderRadius: 32 }}
+                contentFit="cover"
+                transition={300}
+                onLoad={() => console.log("¡Imagen cargada exitosamente con ExpoImage!")}
+                onError={(e) => console.log("Error al renderizar imagen con ExpoImage:", e)}
+              />
+            ) : (
               <Ionicons name="person" size={28} color="#0077B6" />
-            </View>
-          )}
+            )}
+          </View>
         </View>
 
         {/* Tarjeta de Estatus de Disponibilidad */}
@@ -169,7 +182,7 @@ export default function WorkerHome() {
           />
         </View>
 
-        {/* Resumen rápido de métricas (Calificación y Trabajos sumados) */}
+        {/* Resumen rápido de métricas */}
         <View style={stylesHome.statsRow}>
           <View style={stylesHome.statCard}>
             <Ionicons name="star" size={24} color="#f1c40f" />
@@ -204,7 +217,7 @@ export default function WorkerHome() {
           )}
         </View>
 
-        {/* Estado Vacío: Esperando Solicitudes */}
+        {/* Estado Vacío */}
         <View style={[stylesHome.emptyContainer, { marginTop: 20 }]}>
           <View style={stylesHome.iconCircle}>
             <Ionicons name="notifications-outline" size={48} color="#0077B6" />
@@ -217,7 +230,7 @@ export default function WorkerHome() {
 
       </View>
 
-      {/* Pie de página institucional */}
+      {/* Pie de página */}
       <View style={stylesHome.footer}>
         <View style={stylesHome.footerLogoRow}>
           <Ionicons name="briefcase" size={22} color="white" />
