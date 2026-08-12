@@ -30,9 +30,9 @@ export default function HomeScreen() {
   useEffect(() => {
     if (params.role === 'cliente' || params.role === 'trabajador') {
       setCurrentRole(params.role);
-      if (params.nombre) {
-        setUserName(params.nombre as string);
-      }
+    }
+    if (params.nombre) {
+      setUserName(params.nombre as string);
     }
   }, [params.role, params.nombre]);
 
@@ -144,7 +144,7 @@ export default function HomeScreen() {
     router.push('/login');
   };
 
-  const menuItems = currentRole === 'cliente'
+  const menuItems = currentRole === 'cliente' 
     ? [
         { id: 'perfil', title: 'Perfil', icon: 'person-outline' as const },
         { id: 'chats', title: 'Chats', icon: 'chatbubbles-outline' as const },
@@ -186,12 +186,15 @@ export default function HomeScreen() {
           <View style={styles.searchHeroBackground}>
             <View style={styles.searchBarContainer}>
               <Ionicons name="search-outline" size={20} color="#94A3B8" style={{ marginLeft: 8 }} />
-              <TextInput
-                placeholder="Buscar plomero, fotógrafo..."
+              <TextInput 
+                placeholder="Buscar plomero, fotógrafo..." 
                 placeholderTextColor="#94A3B8"
                 style={styles.searchInput}
                 value={searchQuery}
-                onChangeText={(txt) => { setSearchQuery(txt); if (txt === '') setFilteredWorkers([]); }}
+                onChangeText={(txt) => { 
+                  setSearchQuery(txt); 
+                  if (txt === '') setFilteredWorkers([]); 
+                }}
               />
               <TouchableOpacity style={styles.searchButton} onPress={() => executeSearch(searchQuery)}>
                 <ThemedText style={styles.searchButtonText}>Buscar</ThemedText>
@@ -229,7 +232,7 @@ export default function HomeScreen() {
               <ThemedText style={styles.workerPromoTitle}>¿Eres Trabajador?</ThemedText>
               <ThemedText style={styles.workerPromoSubtitle}>Únete y conecta con miles de clientes</ThemedText>
               <TouchableOpacity style={styles.workerRegisterButton} onPress={() => router.push('/register')}>
-                <ThemedText style={styles.workerRegisterText}>Registrate Gratis</ThemedText>
+                <ThemedText style={styles.workerRegisterText}>Regístrate Gratis</ThemedText>
               </TouchableOpacity>
             </View>
           </View>
@@ -258,7 +261,13 @@ export default function HomeScreen() {
           <Ionicons name="person-circle-outline" size={28} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
+
+      <View style={styles.globalWelcomeRow}>
+        <ThemedText style={styles.globalWelcomeText}>¡Bienvenido, {userName}!</ThemedText>
+      </View>
+
       {currentRole === 'cliente' ? <ClientHome userName={userName} /> : <WorkerHome />}
+
       <Modal transparent={true} visible={isMenuOpen} animationType="fade" onRequestClose={() => setIsMenuOpen(false)}>
         <View style={styles.modalOverlay}>
           <TouchableOpacity style={styles.closeOverlay} onPress={() => setIsMenuOpen(false)} activeOpacity={1} />
@@ -267,14 +276,24 @@ export default function HomeScreen() {
               <ThemedText style={styles.menuHeaderTitle}>{currentRole === 'cliente' ? 'Menú Cliente' : 'Panel de Trabajo'}</ThemedText>
             </View>
             {menuItems.map((item) => (
-              <TouchableOpacity key={item.id} style={styles.menuItem} onPress={() => {
-                setIsMenuOpen(false);
-                if (item.id.includes('perfil')) router.push('/profile' as any);
-                else if (item.id.includes('chats')) router.push('/chats' as any);
-                else if (item.id === 'favoritos') router.push('/favorites' as any);
-                else if (item.id.includes('historias') || item.id.includes('historial')) router.push('/history' as any);
-                else if (item.id === 'calificaciones') router.push('/ratings' as any);
-              }}>
+              <TouchableOpacity 
+                key={item.id} 
+                style={styles.menuItem} 
+                onPress={() => {
+                  setIsMenuOpen(false);
+                  if (item.id === 'perfil' || item.id === 'perfil-w') {
+                    router.push('/(tabs)/Perfil/workerProfile' as any);
+                  } else if (item.id === 'chats' || item.id === 'chats-w') {
+                    router.push('/chats' as any);
+                  } else if (item.id === 'favoritos') {
+                    router.push('/favorites' as any);
+                  } else if (item.id === 'historias' || item.id === 'historial-w') {
+                    router.push('/history' as any);
+                  } else if (item.id === 'calificaciones') {
+                    router.push('/ratings' as any);
+                  }
+                }}
+              >
                 <Ionicons name={item.icon} size={22} color="#00B4D8" style={{ marginRight: 15 }} />
                 <ThemedText style={styles.menuItemText}>{item.title}</ThemedText>
               </TouchableOpacity>
