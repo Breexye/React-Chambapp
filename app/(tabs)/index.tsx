@@ -272,7 +272,7 @@ export default function HomeScreen() {
                 if (item.id.includes('perfil')) router.push('/profile' as any);
                 else if (item.id.includes('chats')) router.push('/chats' as any);
                 else if (item.id === 'favoritos') router.push('/favorites' as any);
-                else if (item.id.includes('historias')) router.push('/history' as any);
+                else if (item.id.includes('historias') || item.id.includes('historial')) router.push('/history' as any);
                 else if (item.id === 'calificaciones') router.push('/ratings' as any);
               }}>
                 <Ionicons name={item.icon} size={22} color="#00B4D8" style={{ marginRight: 15 }} />

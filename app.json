@@ -55,7 +55,8 @@
           "photosPermission": "La app necesita acceder a tus fotos para establecer tu imagen.",
           "cameraPermission": "La app necesita acceder a tu cámara para tomar la fotografía de tu INE y perfil."
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,
