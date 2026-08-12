@@ -1,14 +1,17 @@
 import { ThemedText } from '@/components/themed-text';
 import { stylesHome as styles } from '@/constants/stylesHome';
 import { workerProfileStyles as profileStyles } from '@/constants/workerProfileStyles'; 
+import { supabase } from '@/src/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Image, Modal, ScrollView, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Image, Modal, ScrollView, TouchableOpacity, View } from 'react-native';
 
 export default function WorkerProfileScreen() {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [userData, setUserData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   const menuItems = [
     { id: 'perfil-w', title: 'Mi Perfil Profesional', icon: 'briefcase-outline' as const },
@@ -17,14 +20,56 @@ export default function WorkerProfileScreen() {
     { id: 'historial-w', title: 'Historial de Trabajos', icon: 'document-text-outline' as const },
   ];
 
-  const handleLogout = () => {
-    setIsMenuOpen(false);
-    router.push('/(tabs)');
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      setLoading(true);
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+      if (authError || !user) {
+        throw new Error('No hay una sesión activa.');
+      }
+
+      const { data, error: dbError } = await supabase
+        .from('users')
+        .select('name, email, phone, role, job_title, job_description, profile_image')
+        .eq('id', user.id)
+        .single();
+
+      if (dbError) throw dbError;
+
+      setUserData(data);
+    } catch (error: any) {
+      console.error('Error cargando perfil:', error);
+      Alert.alert('Error', 'No se pudieron obtener los datos de tu perfil.');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleLogout = async () => {
+    setIsMenuOpen(false);
+    await supabase.auth.signOut();
+    router.replace('/login' as any);
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.appContainer, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#00B4D8" />
+        <ThemedText style={{ color: '#FFFFFF', marginTop: 10 }}>Cargando perfil...</ThemedText>
+      </View>
+    );
+  }
+
+  const defaultAvatar = 'https://static.vecteezy.com/system/resources/previews/015/272/327/non_2x/construction-worker-icon-person-profile-avatar-with-hard-helmet-and-jacket-builder-man-in-a-helmet-icon-illustration-vector.jpg';
 
   return (
     <View style={styles.appContainer}>
-      {/* ENCABEZADO SUPERIOR CON MENÚ HAMBURGUESA  */}
+      {/* ENCABEZADO SUPERIOR CON MENÚ HAMBURGUESA */}
       <View style={styles.globalHeaderTopRow}>
         <TouchableOpacity onPress={() => setIsMenuOpen(true)} style={styles.headerIconBtn}>
           <Ionicons name="menu-outline" size={28} color="#FFFFFF" />
@@ -41,15 +86,19 @@ export default function WorkerProfileScreen() {
         <ThemedText style={styles.globalWelcomeText}>Perfil del Trabajador</ThemedText>
       </View>
 
-      {/* CONTENIDO DEL PERFIL (Usa workerProfileStyles) */}
+      {/* CONTENIDO DEL PERFIL */}
       <ScrollView style={profileStyles.container} showsVerticalScrollIndicator={false}>
         <View style={profileStyles.profileHeaderContainer}>
           <Image 
-            source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSuVaP-wCLSa7gu55pQxJwm6Kh-Fg_2W7paWFIuHM51Ci1dvHs7rk2eg91&s=10' }} 
+            source={{ uri: userData?.profile_image || defaultAvatar }} 
             style={profileStyles.avatar} 
           />
-          <ThemedText style={profileStyles.workerName}>Carlos Ramírez</ThemedText>
-          <ThemedText style={profileStyles.workerProfession}>Electricista</ThemedText>
+          <ThemedText style={profileStyles.workerName}>
+            {userData?.name || 'Nombre no disponible'}
+          </ThemedText>
+          <ThemedText style={profileStyles.workerProfession}>
+            {userData?.job_title || 'Especialidad no registrada'}
+          </ThemedText>
           
           <View style={profileStyles.ratingRow}>
             <Ionicons name="star" size={18} color="#FACC15" />
@@ -74,7 +123,7 @@ export default function WorkerProfileScreen() {
           <ThemedText style={profileStyles.sectionTitle}>Acerca de mí</ThemedText>
           <View style={profileStyles.cardBox}>
             <ThemedText style={profileStyles.cardText}>
-              Especialista en instalaciones eléctricas residenciales, aveces me electrocuto pero nada me quita lo erizo solo el amor por mi trabajo
+              {userData?.job_description || 'Sin descripción disponible.'}
             </ThemedText>
           </View>
         </View>
@@ -102,7 +151,7 @@ export default function WorkerProfileScreen() {
               </View>
             </View>
             <ThemedText style={profileStyles.reviewComment}>
-              Excelente servicio, muy puntual y dejó todo limpio después de arreglar el cableado de la cocina. Hasta se puso a desayunar conmigo
+              Excelente servicio, muy puntual y dejó todo limpio después de realizar el trabajo.
             </ThemedText>
             <Image 
               source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSqDxHItx-SXJy7Sa7zl15mS5oOFXF4wIMpZ302DCeyx-buh5hgnBOCLbM&s=10' }} 
@@ -112,7 +161,7 @@ export default function WorkerProfileScreen() {
         </View>
       </ScrollView>
 
-      {/* MODAL DEL MENÚ DESPLEGABLE (Usa stylesHome) */}
+      {/* MODAL DEL MENÚ DESPLEGABLE */}
       <Modal transparent={true} visible={isMenuOpen} animationType="fade" onRequestClose={() => setIsMenuOpen(false)}>
         <View style={styles.modalOverlay}>
           <TouchableOpacity style={styles.closeOverlay} onPress={() => setIsMenuOpen(false)} activeOpacity={1} />
