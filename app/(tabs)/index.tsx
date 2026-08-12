@@ -1,10 +1,9 @@
-import ClientHome from '@/components/Home/ClientHome';
-import WorkerHome from '@/components/Home/WorkerHome';
 import { ThemedText } from '@/components/themed-text';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Modal, ScrollView, TextInput, TouchableOpacity, View } from 'react-native';
+import { ScrollView, TextInput, TouchableOpacity, View } from 'react-native';
+import { NavBar } from '@/components/ui/nav-bar';
 
 import { Worker, WorkerCard } from '@/components/WorkerCard';
 import { stylesHome as styles } from '@/constants/stylesHome';
@@ -209,69 +208,6 @@ export default function HomeScreen() {
 
   // MODO USUARIO LOGUEADO (CLIENTE O TRABAJADOR)
   return (
-    <View style={styles.appContainer}>
-      <View style={styles.globalHeaderTopRow}>
-        <TouchableOpacity onPress={() => setIsMenuOpen(true)} style={styles.headerIconBtn}>
-          <Ionicons name="menu-outline" size={28} color="#FFFFFF" />
-        </TouchableOpacity>
-
-        <ThemedText style={styles.globalHeaderLogo}>ChambApp</ThemedText>
-
-        <TouchableOpacity style={styles.headerIconBtn}>
-          <Ionicons name="person-circle-outline" size={28} color="#FFFFFF" />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.globalWelcomeRow}>
-        <ThemedText style={styles.globalWelcomeText}>¡Bienvenido, {userName}!</ThemedText>
-      </View>
-
-      {currentRole === 'cliente' ? <ClientHome userName={userName} /> : <WorkerHome />}
-
-      <Modal transparent={true} visible={isMenuOpen} animationType="fade" onRequestClose={() => setIsMenuOpen(false)}>
-        <View style={styles.modalOverlay}>
-          <TouchableOpacity style={styles.closeOverlay} onPress={() => setIsMenuOpen(false)} activeOpacity={1} />
-          
-          <View style={styles.menuDrawer}>
-            <View style={styles.menuHeader}>
-              <ThemedText style={styles.menuHeaderTitle}>
-                {currentRole === 'cliente' ? 'Menú Cliente' : 'Panel de Trabajo'}
-              </ThemedText>
-            </View>
-
-            {menuItems.map((item) => (
-              <TouchableOpacity 
-                key={item.id} 
-                style={styles.menuItem} 
-                onPress={() => {
-                  setIsMenuOpen(false);
-
-                  // MODIFICA AQUÍ LAS RUTAS SEGÚN LAS PANTALLAS CORRESPONDIENTES
-                  if (item.id === 'perfil' || item.id === 'perfil-w') {
-                    router.push('/profile' as any);
-                  } else if (item.id === 'chats' || item.id === 'chats-w') {
-                    router.push('/chats' as any);
-                  } else if (item.id === 'favoritos') {
-                    router.push('/favorites' as any);
-                  } else if (item.id === 'historias' || item.id === 'historial-w') {
-                    router.push('/history' as any);
-                  } else if (item.id === 'calificaciones') {
-                    router.push('/ratings' as any);
-                  }
-                }}
-              >
-                <Ionicons name={item.icon} size={22} color="#00B4D8" style={{ marginRight: 15 }} />
-                <ThemedText style={styles.menuItemText}>{item.title}</ThemedText>
-              </TouchableOpacity>
-            ))}
-
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-              <Ionicons name="log-out-outline" size={22} color="#FF4D4D" style={{ marginRight: 15 }} />
-              <ThemedText style={styles.logoutText}>Cerrar Sesión</ThemedText>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-    </View>
+    <NavBar />
   );
 }

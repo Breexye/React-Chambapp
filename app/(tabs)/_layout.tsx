@@ -37,7 +37,7 @@ export default function TabLayout() {
           title: 'Login',
           tabBarIcon: ({ color }) => <Ionicons name="log-in-outline" size={24} color={color} />,
         }}
-/>
+      />
     </Tabs>
   );
 }
