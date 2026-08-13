@@ -17,9 +17,8 @@ export default function HomeScreen() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredWorkers, setFilteredWorkers] = useState<Worker[]>([]);
-
   const [popularTrades, setPopularTrades] = useState<Array<{ label: string; icon: string; jobs: string; count?: number }>>([
-    { label: 'Plomeria', icon: 'water-outline', jobs: '0 trabajos' },
+    { label: 'Plomería', icon: 'water-outline', jobs: '0 trabajos' },
     { label: 'Electricista', icon: 'flash-outline', jobs: '0 trabajos' },
     { label: 'Carpintería', icon: 'hammer-outline', jobs: '0 trabajos' },
     { label: 'Fotógrafo', icon: 'camera-outline', jobs: '0 trabajos' },
@@ -42,21 +41,38 @@ export default function HomeScreen() {
     }
   }, [currentRole]);
 
-  const mapSupabaseWorkerToCard = (item: any): Worker => ({
-    id: String(item.id || Math.random()),
-    name: item.name || 'Sin nombre',
-    job_title: item.job_title || 'Independiente',
-    calificacion: item.calificacion || 5.0,
-    resenas: item.resenas || 0,
-    disponible: true,
-    job_description: item.job_description || 'Sin descripción disponible.',
-    profile_image: item.profile_image || '',
-  });
+  const mapSupabaseWorkerToCard = async (item: any): Promise<Worker> => {
+    // Consultamos las reseñas reales del trabajador en Supabase para calcular calificación y conteo
+    const { data: reviewsData } = await supabase
+      .from('reviews')
+      .select('rating')
+      .eq('worker_id', item.id);
+
+    let promedio = 5.0;
+    let totalResenas = 0;
+
+    if (reviewsData && reviewsData.length > 0) {
+      totalResenas = reviewsData.length;
+      const sumaCalificaciones = reviewsData.reduce((acc, curr) => acc + (curr.rating || 0), 0);
+      promedio = Number((sumaCalificaciones / totalResenas).toFixed(1));
+    }
+
+    return {
+      id: String(item.id || Math.random()),
+      name: item.name || 'Sin nombre',
+      job_title: item.profession || item.job_title || 'Independiente',
+      calificacion: promedio,
+      resenas: totalResenas,
+      disponible: true,
+      job_description: item.job_description || item.about || 'Sin descripción disponible.',
+      profile_image: item.profile_image,
+    };
+  };
 
   const fetchPopularTradesAndWorkers = async () => {
     try {
       const baseCatalog = [
-        { label: 'Plomeria', icon: 'water-outline' },
+        { label: 'Plomería', icon: 'water-outline' },
         { label: 'Electricista', icon: 'flash-outline' },
         { label: 'Carpintería', icon: 'hammer-outline' },
         { label: 'Fotógrafo', icon: 'camera-outline' },
@@ -70,40 +86,56 @@ export default function HomeScreen() {
         .from('users')
         .select('*');
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      const workersList = data || [];
+      const workersList = (data || []).filter((w: any) => w.role === 'trabajador');
+
+      // Mapeo flexible de sinónimos para contar correctamente
+      const synonyms: { [key: string]: string[] } = {
+        'Plomería': ['plomero', 'fontanero', 'plomeria'],
+        'Electricista': ['electricista', 'electrico', 'electricidad'],
+        'Carpintería': ['carpintero', 'carpinteria'],
+        'Fotógrafo': ['fotografo', 'fotografa', 'foto', 'fotografia'],
+        'Albañilería': ['albañil', 'albanil', 'constructor', 'albanileria'],
+        'Jardinería': ['jardinero', 'jardineria', 'jardin'],
+        'Herrería': ['herrero', 'herreria'],
+        'Limpieza': ['limpieza', 'limpiador', 'aseo'],
+      };
 
       const counts: { [key: string]: number } = {};
-      workersList.forEach((worker: any) => {
-        if (worker.job_title) {
-          const title = worker.job_title.trim();
-          counts[title] = (counts[title] || 0) + 1;
-        }
+      baseCatalog.forEach(cat => {
+        counts[cat.label] = workersList.filter((worker: any) => {
+          const userProf = (worker.profession || worker.job_title || '').toLowerCase().trim();
+          const catName = cat.label.toLowerCase();
+          if (userProf.includes(catName.slice(0, 4))) return true;
+          if (synonyms[cat.label] && synonyms[cat.label].some(s => userProf.includes(s))) {
+            return true;
+          }
+          return false;
+        }).length;
       });
 
       const combined = baseCatalog.map(item => ({
         ...item,
         count: counts[item.label] || 0,
-        jobs: `${counts[item.label] || 0} ${counts[item.label] === 1 ? 'trabajo' : 'trabajos'}`
+        jobs: `${counts[item.label] || 0} ${counts[item.label] === 1 ? 'trabajo' : 'trabajos'}`,
       }));
 
       combined.sort((a, b) => (b.count || 0) - (a.count || 0));
       setPopularTrades(combined.slice(0, 6));
 
       if (searchQuery.trim() !== '') {
-        const results = workersList
-          .filter((worker: any) => {
-            const job = worker.job_title || '';
-            const name = worker.name || '';
-            return (
-              job.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              name.toLowerCase().includes(searchQuery.toLowerCase())
-            );
-          })
-          .map(mapSupabaseWorkerToCard);
+        const query = searchQuery.toLowerCase();
+        const filtered = workersList.filter((worker: any) => {
+          const prof = (worker.profession || worker.job_title || '').toLowerCase();
+          const name = (worker.name || '').toLowerCase();
+          const desc = (worker.job_description || worker.about || '').toLowerCase();
+          return prof.includes(query) || name.includes(query) || desc.includes(query);
+        });
+
+        const results = await Promise.all(
+          filtered.map(async (worker: any) => await mapSupabaseWorkerToCard(worker))
+        );
         setFilteredWorkers(results);
       }
     } catch (err) {
@@ -124,27 +156,34 @@ export default function HomeScreen() {
     setSearchQuery(text);
     if (text.trim() === '') {
       setFilteredWorkers([]);
-    } else {
-      try {
-        const { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .ilike('job_title', `%${text}%`);
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('role', 'trabajador');
 
-        if (error) throw error;
-        const formatted = (data || []).map(mapSupabaseWorkerToCard);
-        setFilteredWorkers(formatted);
-      } catch (err) {
-        console.error("Error en executeSearch:", err);
-      }
+      if (error) throw error;
+
+      const query = text.toLowerCase();
+      const filtered = (data || []).filter((worker: any) => {
+        const prof = (worker.profession || worker.job_title || '').toLowerCase();
+        const name = (worker.name || '').toLowerCase();
+        const desc = (worker.job_description || worker.about || '').toLowerCase();
+        return prof.includes(query) || name.includes(query) || desc.includes(query);
+      });
+
+      const formatted = await Promise.all(
+        filtered.map(async (worker: any) => await mapSupabaseWorkerToCard(worker))
+      );
+      setFilteredWorkers(formatted);
+    } catch (err) {
+      console.error("Error en executeSearch:", err);
     }
   };
 
-  const handleViewProfileProtected = () => {
-    router.push('/login');
-  };
-
-  const menuItems = currentRole === 'cliente' 
+  const menuItems = currentRole === 'cliente'
     ? [
         { id: 'perfil', title: 'Perfil', icon: 'person-outline' as const },
         { id: 'chats', title: 'Chats', icon: 'chatbubbles-outline' as const },
@@ -186,14 +225,14 @@ export default function HomeScreen() {
           <View style={styles.searchHeroBackground}>
             <View style={styles.searchBarContainer}>
               <Ionicons name="search-outline" size={20} color="#94A3B8" style={{ marginLeft: 8 }} />
-              <TextInput 
-                placeholder="Buscar plomero, fotógrafo..." 
+              <TextInput
+                placeholder="Buscar plomero, fotógrafo..."
                 placeholderTextColor="#94A3B8"
                 style={styles.searchInput}
                 value={searchQuery}
-                onChangeText={(txt) => { 
-                  setSearchQuery(txt); 
-                  if (txt === '') setFilteredWorkers([]); 
+                onChangeText={(txt) => {
+                  setSearchQuery(txt);
+                  if (txt === '') setFilteredWorkers([]);
                 }}
               />
               <TouchableOpacity style={styles.searchButton} onPress={() => executeSearch(searchQuery)}>
@@ -206,7 +245,7 @@ export default function HomeScreen() {
             <View style={styles.tradesSection}>
               <ThemedText style={styles.tradesTitle}>Resultados para "{searchQuery}"</ThemedText>
               {filteredWorkers.map((worker) => (
-                <WorkerCard key={worker.id} worker={worker} onPress={handleViewProfileProtected} />
+                <WorkerCard key={worker.id} worker={worker} />
               ))}
             </View>
           ) : (
@@ -232,7 +271,7 @@ export default function HomeScreen() {
               <ThemedText style={styles.workerPromoTitle}>¿Eres Trabajador?</ThemedText>
               <ThemedText style={styles.workerPromoSubtitle}>Únete y conecta con miles de clientes</ThemedText>
               <TouchableOpacity style={styles.workerRegisterButton} onPress={() => router.push('/register')}>
-                <ThemedText style={styles.workerRegisterText}>Regístrate Gratis</ThemedText>
+                <ThemedText style={styles.workerRegisterText}>Registrate Gratis</ThemedText>
               </TouchableOpacity>
             </View>
           </View>
@@ -261,7 +300,6 @@ export default function HomeScreen() {
           <Ionicons name="person-circle-outline" size={28} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
-
       <View style={styles.globalWelcomeRow}>
         <ThemedText style={styles.globalWelcomeText}>¡Bienvenido, {userName}!</ThemedText>
       </View>
@@ -273,15 +311,19 @@ export default function HomeScreen() {
           <TouchableOpacity style={styles.closeOverlay} onPress={() => setIsMenuOpen(false)} activeOpacity={1} />
           <View style={styles.menuDrawer}>
             <View style={styles.menuHeader}>
-              <ThemedText style={styles.menuHeaderTitle}>{currentRole === 'cliente' ? 'Menú Cliente' : 'Panel de Trabajo'}</ThemedText>
+              <ThemedText style={styles.menuHeaderTitle}>
+                {currentRole === 'cliente' ? 'Menú Cliente' : 'Panel de Trabajo'}
+              </ThemedText>
             </View>
             {menuItems.map((item) => (
-              <TouchableOpacity 
-                key={item.id} 
-                style={styles.menuItem} 
+              <TouchableOpacity
+                key={item.id}
+                style={styles.menuItem}
                 onPress={() => {
                   setIsMenuOpen(false);
-                  if (item.id === 'perfil' || item.id === 'perfil-w') {
+                  if (item.id === 'perfil') {
+                    router.push('/(tabs)/Perfil/clientProfiles' as any);
+                  } else if (item.id === 'perfil-w') {
                     router.push('/(tabs)/Perfil/workerProfile' as any);
                   } else if (item.id === 'chats' || item.id === 'chats-w') {
                     router.push('/chats' as any);

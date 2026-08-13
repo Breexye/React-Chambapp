@@ -1,205 +1,451 @@
-import { ThemedText } from '@/components/themed-text';
-import { stylesHome as styles } from '@/constants/stylesHome';
-import { workerProfileStyles as profileStyles } from '@/constants/workerProfileStyles'; 
+// app/(tabs)/Perfil/workerProfile.tsx
+import { stylesGeneral } from '@/constants/stylesGeneral';
+import { stylesWorker as styles } from '@/constants/stylesWorker';
+import { reviewService } from '@/services/reviewService';
+import { storageService } from '@/services/storageService';
+import { userService } from '@/services/userService';
 import { supabase } from '@/src/supabase';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Modal, ScrollView, TouchableOpacity, View } from 'react-native';
+import {
+    ActivityIndicator,
+    Alert,
+    Image,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+
+interface ReviewUI {
+  id: string;
+  userName: string;
+  userImage?: string | null;
+  date: string;
+  rating: number;
+  comment: string;
+  imageUrl?: string;
+}
 
 export default function WorkerProfileScreen() {
   const router = useRouter();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [userData, setUserData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  const menuItems = [
-    { id: 'perfil-w', title: 'Mi Perfil Profesional', icon: 'briefcase-outline' as const },
-    { id: 'chats-w', title: 'Mis Mensajes / Chats', icon: 'chatbubbles-outline' as const },
-    { id: 'calificaciones', title: 'Mis Calificaciones', icon: 'star-outline' as const },
-    { id: 'historial-w', title: 'Historial de Trabajos', icon: 'document-text-outline' as const },
-  ];
+  const params = useLocalSearchParams();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isOwnProfile, setIsOwnProfile] = useState<boolean>(true);
+  const [isFavorite, setIsFavorite] = useState<boolean>(false);
+  const [workerData, setWorkerData] = useState<any>(null);
+  const [profileImage, setProfileImage] = useState<string>('https://via.placeholder.com/150');
+  const [aboutText, setAboutText] = useState<string>('');
+  const [isEditingAbout, setIsEditingAbout] = useState<boolean>(false);
+  const [averageRating, setAverageRating] = useState<number>(0);
+  const [reviews, setReviews] = useState<ReviewUI[]>([]);
+  const [newRating, setNewRating] = useState<number>(5);
+  const [newComment, setNewComment] = useState<string>('');
+  const [reviewImage, setReviewImage] = useState<string | null>(null);
+  const [isSubmittingReview, setIsSubmittingReview] = useState<boolean>(false);
 
   useEffect(() => {
-    fetchUserProfile();
-  }, []);
+    loadData();
+  }, [params?.workerId]);
 
-  const fetchUserProfile = async () => {
+  useEffect(() => {
+    if (reviews.length === 0) {
+      setAverageRating(0);
+      return;
+    }
+    const totalSum = reviews.reduce((sum, review) => sum + review.rating, 0);
+    const avg = totalSum / reviews.length;
+    setAverageRating(Math.round(avg * 10) / 10);
+  }, [reviews]);
+
+  const loadData = async () => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw new Error("Usuario no autenticado");
+      
+      setCurrentUserId(user.id);
+      const targetWorkerId = (params?.workerId as string) || user.id;
+      const own = targetWorkerId === user.id;
+      setIsOwnProfile(own);
 
-      if (authError || !user) {
-        throw new Error('No hay una sesión activa.');
+      const data = await userService.getUserById(targetWorkerId);
+      setWorkerData(data);
+      if (data?.profile_image) setProfileImage(data.profile_image);
+      setAboutText(data?.about || 'Sin descripción.');
+
+      // Verificar si ya es favorito
+      if (!own) {
+        const { data: favData } = await supabase
+          .from('favorites')
+          .select('id')
+          .eq('client_id', user.id)
+          .eq('worker_id', targetWorkerId)
+          .maybeSingle();
+
+        setIsFavorite(!!favData);
       }
 
-      const { data, error: dbError } = await supabase
-        .from('users')
-        .select('name, email, phone, role, job_title, job_description, profile_image')
-        .eq('id', user.id)
-        .single();
+      const { data: rawReviews, error: revError } = await supabase
+        .from('reviews')
+        .select(`
+          id, rating, comment, image_url, created_at, client_id,
+          users:client_id (name, profile_image)
+        `)
+        .eq('worker_id', targetWorkerId)
+        .order('created_at', { ascending: false });
 
-      if (dbError) throw dbError;
+      if (revError) throw revError;
 
-      setUserData(data);
+      const formattedReviews: ReviewUI[] = (rawReviews || []).map((rev: any) => ({
+        id: rev.id,
+        userName: rev.users?.name || 'Usuario',
+        userImage: rev.users?.profile_image || null,
+        date: new Date(rev.created_at).toLocaleDateString(),
+        rating: rev.rating,
+        comment: rev.comment,
+        imageUrl: rev.image_url,
+      }));
+
+      setReviews(formattedReviews);
     } catch (error: any) {
-      console.error('Error cargando perfil:', error);
-      Alert.alert('Error', 'No se pudieron obtener los datos de tu perfil.');
+      Alert.alert('Error', 'No se pudieron cargar los datos del perfil.');
+      console.error(error.message);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleLogout = async () => {
-    setIsMenuOpen(false);
-    await supabase.auth.signOut();
-    router.replace('/login' as any);
+  const toggleFavorite = async () => {
+    if (!currentUserId || !params?.workerId) {
+      console.log("Faltan datos de sesión o workerId:", { currentUserId, workerId: params?.workerId });
+      return;
+    }
+    const targetWorkerId = params.workerId as string;
+    try {
+      if (isFavorite) {
+        const { error } = await supabase
+          .from('favorites')
+          .delete()
+          .eq('client_id', currentUserId)
+          .eq('worker_id', targetWorkerId);
+
+        if (error) throw error;
+        setIsFavorite(false);
+      } else {
+        const { error } = await supabase
+          .from('favorites')
+          .insert([{ client_id: currentUserId, worker_id: targetWorkerId }]);
+
+        if (error) throw error;
+        setIsFavorite(true);
+      }
+    } catch (error: any) {
+      console.error("Error detallado en favoritos:", error);
+      Alert.alert('Error', 'No se pudo actualizar favoritos: ' + (error.message || error));
+    }
   };
 
-  if (loading) {
+  const handlePickProfileImage = async () => {
+    if (!isOwnProfile || !currentUserId) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0].uri) {
+      const imageUri = result.assets[0].uri;
+      setProfileImage(imageUri);
+      try {
+        Alert.alert('Actualizando...', 'Subiendo nueva foto de perfil.');
+        const publicUrl = await storageService.uploadImage(imageUri, 'profiles', currentUserId);
+        await userService.updateWorkerProfile(currentUserId, { profile_image: publicUrl });
+        Alert.alert('Éxito!', 'Foto de perfil actualizada.');
+      } catch (error: any) {
+        Alert.alert('Error', 'No se pudo guardar la foto.');
+        setProfileImage(workerData?.profile_image || 'https://via.placeholder.com/150');
+      }
+    }
+  };
+
+  const handleSaveAbout = async () => {
+    if (!isOwnProfile || !currentUserId) return;
+    setIsEditingAbout(false);
+    if (aboutText === workerData?.about) return;
+    try {
+      await userService.updateWorkerProfile(currentUserId, { about: aboutText });
+      setWorkerData({ ...workerData, about: aboutText });
+      Alert.alert('Éxito!', 'Descripción actualizada.');
+    } catch (error: any) {
+      Alert.alert('Error', 'No se pudo guardar la descripción.');
+      setAboutText(workerData?.about || '');
+    }
+  };
+
+  const handlePickReviewImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0].uri) {
+      setReviewImage(result.assets[0].uri);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!newComment.trim()) {
+      Alert.alert('Atención', 'Por favor escribe un comentario.');
+      return;
+    }
+    if (!currentUserId || !workerData) return;
+
+    try {
+      setIsSubmittingReview(true);
+      let uploadedImageUrl: string | null = null;
+      if (reviewImage) {
+        uploadedImageUrl = await storageService.uploadImage(
+          reviewImage,
+          'reviews',
+          `${currentUserId}_${Date.now()}`
+        );
+      }
+
+      await reviewService.createReview({
+        worker_id: workerData.id || params?.workerId,
+        client_id: currentUserId,
+        rating: newRating,
+        comment: newComment,
+        image_url: uploadedImageUrl || undefined,
+      });
+
+      Alert.alert('Éxito!', 'Tu opinión ha sido publicada.');
+      setNewComment('');
+      setReviewImage(null);
+      setNewRating(5);
+      loadData();
+    } catch (error: any) {
+      Alert.alert('Error', 'No se pudo enviar la reseña.');
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
+  if (isLoading) {
     return (
-      <View style={[styles.appContainer, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color="#00B4D8" />
-        <ThemedText style={{ color: '#FFFFFF', marginTop: 10 }}>Cargando perfil...</ThemedText>
+      <View style={[stylesGeneral.container, stylesGeneral.center]}>
+        <ActivityIndicator size="large" color="#00b4d8" />
       </View>
     );
   }
 
-  const defaultAvatar = 'https://static.vecteezy.com/system/resources/previews/015/272/327/non_2x/construction-worker-icon-person-profile-avatar-with-hard-helmet-and-jacket-builder-man-in-a-helmet-icon-illustration-vector.jpg';
-
   return (
-    <View style={styles.appContainer}>
-      {/* ENCABEZADO SUPERIOR CON MENÚ HAMBURGUESA */}
-      <View style={styles.globalHeaderTopRow}>
-        <TouchableOpacity onPress={() => setIsMenuOpen(true)} style={styles.headerIconBtn}>
-          <Ionicons name="menu-outline" size={28} color="#FFFFFF" />
+    <View style={stylesGeneral.container}>
+      <View style={stylesGeneral.navBarContainer}>
+        <TouchableOpacity style={stylesGeneral.headerIconBtn} onPress={() => router.push('/(tabs)')}>
+          <Ionicons name="home-outline" size={26} color="#ffffff" />
         </TouchableOpacity>
-
-        <ThemedText style={styles.globalHeaderLogo}>ChambApp</ThemedText>
-
-        <TouchableOpacity style={styles.headerIconBtn}>
-          <Ionicons name="person-circle-outline" size={28} color="#FFFFFF" />
+        <Text style={stylesGeneral.logoText}>ChambApp</Text>
+        <TouchableOpacity style={stylesGeneral.headerIconBtn}>
+          <Ionicons name="person-circle-outline" size={26} color="#ffffff" />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.globalWelcomeRow}>
-        <ThemedText style={styles.globalWelcomeText}>Perfil del Trabajador</ThemedText>
+      <View style={stylesGeneral.subHeaderRow}>
+        <Text style={stylesGeneral.subHeaderText}>
+          {isOwnProfile ? 'Mi Perfil Profesional' : 'Perfil del Trabajador'}
+        </Text>
       </View>
 
-      {/* CONTENIDO DEL PERFIL */}
-      <ScrollView style={profileStyles.container} showsVerticalScrollIndicator={false}>
-        <View style={profileStyles.profileHeaderContainer}>
-          <Image 
-            source={{ uri: userData?.profile_image || defaultAvatar }} 
-            style={profileStyles.avatar} 
-          />
-          <ThemedText style={profileStyles.workerName}>
-            {userData?.name || 'Nombre no disponible'}
-          </ThemedText>
-          <ThemedText style={profileStyles.workerProfession}>
-            {userData?.job_title || 'Especialidad no registrada'}
-          </ThemedText>
-          
-          <View style={profileStyles.ratingRow}>
-            <Ionicons name="star" size={18} color="#FACC15" />
-            <ThemedText style={profileStyles.ratingText}> 4.8 </ThemedText>
-            <ThemedText style={profileStyles.reviewsText}>(34 opiniones)</ThemedText>
-          </View>
-        </View>
-
-        <View style={profileStyles.actionButtonsRow}>
-          <TouchableOpacity style={profileStyles.contactButton}>
-            <Ionicons name="chatbubble-outline" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-            <ThemedText style={profileStyles.buttonText}>Contactar</ThemedText>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={profileStyles.hireButton}>
-            <Ionicons name="briefcase-outline" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-            <ThemedText style={profileStyles.buttonText}>Contratar Servicio</ThemedText>
-          </TouchableOpacity>
-        </View>
-
-        <View style={profileStyles.sectionContainer}>
-          <ThemedText style={profileStyles.sectionTitle}>Acerca de mí</ThemedText>
-          <View style={profileStyles.cardBox}>
-            <ThemedText style={profileStyles.cardText}>
-              {userData?.job_description || 'Sin descripción disponible.'}
-            </ThemedText>
-          </View>
-        </View>
-
-        <View style={profileStyles.sectionContainer}>
-          <View style={profileStyles.reviewsHeaderRow}>
-            <ThemedText style={profileStyles.sectionTitle}>Opiniones y Trabajos Realizados</ThemedText>
-            <TouchableOpacity>
-              <ThemedText style={profileStyles.writeReviewText}>Escribir reseña</ThemedText>
-            </TouchableOpacity>
-          </View>
-
-          <View style={profileStyles.reviewCard}>
-            <View style={profileStyles.reviewUserRow}>
-              <View style={profileStyles.smallAvatar}>
-                <ThemedText style={profileStyles.smallAvatarText}>M</ThemedText>
-              </View>
-              <View style={{ flex: 1, marginLeft: 10 }}>
-                <ThemedText style={profileStyles.reviewUserName}>María Eugenia Soto</ThemedText>
-                <ThemedText style={profileStyles.reviewDate}>Ayer</ThemedText>
-              </View>
-              <View style={profileStyles.miniRatingBadge}>
-                <Ionicons name="star" size={14} color="#FACC15" />
-                <ThemedText style={profileStyles.miniRatingText}> 5</ThemedText>
-              </View>
-            </View>
-            <ThemedText style={profileStyles.reviewComment}>
-              Excelente servicio, muy puntual y dejó todo limpio después de realizar el trabajo.
-            </ThemedText>
-            <Image 
-              source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSqDxHItx-SXJy7Sa7zl15mS5oOFXF4wIMpZ302DCeyx-buh5hgnBOCLbM&s=10' }} 
-              style={profileStyles.reviewImage} 
-            />
-          </View>
-        </View>
-      </ScrollView>
-
-      {/* MODAL DEL MENÚ DESPLEGABLE */}
-      <Modal transparent={true} visible={isMenuOpen} animationType="fade" onRequestClose={() => setIsMenuOpen(false)}>
-        <View style={styles.modalOverlay}>
-          <TouchableOpacity style={styles.closeOverlay} onPress={() => setIsMenuOpen(false)} activeOpacity={1} />
-          
-          <View style={styles.menuDrawer}>
-            <View style={styles.menuHeader}>
-              <ThemedText style={styles.menuHeaderTitle}>Panel de Trabajo</ThemedText>
-            </View>
-
-            {menuItems.map((item) => (
-              <TouchableOpacity 
-                key={item.id} 
-                style={styles.menuItem} 
-                onPress={() => {
-                  setIsMenuOpen(false);
-                  if (item.id === 'perfil-w') {
-                    router.push('/(tabs)/Perfil/workerProfile' as any);
-                  } else if (item.id === 'chats-w') {
-                    router.push('/chats' as any);
-                  } else if (item.id === 'calificaciones') {
-                    router.push('/ratings' as any);
-                  } else if (item.id === 'historial-w') {
-                    router.push('/history' as any);
-                  }
-                }}
-              >
-                <Ionicons name={item.icon} size={22} color="#00B4D8" style={{ marginRight: 15 }} />
-                <ThemedText style={styles.menuItemText}>{item.title}</ThemedText>
+      <ScrollView contentContainerStyle={stylesGeneral.scrollContent}>
+        <View style={styles.profileHeader}>
+          <View style={styles.avatarContainer}>
+            <Image source={{ uri: profileImage }} style={styles.avatar} />
+            {isOwnProfile && (
+              <TouchableOpacity style={styles.cameraBadge} onPress={handlePickProfileImage}>
+                <Ionicons name="camera" size={18} color="#0d1b2a" />
               </TouchableOpacity>
-            ))}
+            )}
+          </View>
 
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-              <Ionicons name="log-out-outline" size={22} color="#FF4D4D" style={{ marginRight: 15 }} />
-              <ThemedText style={styles.logoutText}>Cerrar Sesión</ThemedText>
+          {/* Botón de Favorito */}
+          {!isOwnProfile && (
+            <TouchableOpacity onPress={toggleFavorite} style={{ marginTop: 10 }}>
+              <Ionicons
+                name={isFavorite ? 'heart' : 'heart-outline'}
+                size={30}
+                color={isFavorite ? '#ff4d6d' : '#00b4d8'}
+              />
             </TouchableOpacity>
+          )}
+
+          <Text style={styles.workerName}>{workerData?.name || 'Cargando...'}</Text>
+          <Text style={styles.workerProfession}>
+            {workerData?.job_title || 'Profesional independiente'}
+          </Text>
+
+          <View style={stylesGeneral.ratingRow}>
+            <Ionicons name="star" size={18} color="#ffd166" />
+            <Text style={stylesGeneral.ratingText}>
+              {reviews.length === 0 ? 'Nuevo' : averageRating.toFixed(1)} ({reviews.length} opiniones)
+            </Text>
           </View>
         </View>
-      </Modal>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Acerca de mí</Text>
+        </View>
+
+        <View style={styles.aboutBox}>
+          {isOwnProfile && isEditingAbout ? (
+            <TextInput
+              style={styles.aboutInput}
+              value={aboutText}
+              onChangeText={setAboutText}
+              multiline
+              autoFocus
+              maxLength={200}
+            />
+          ) : (
+            <Text style={styles.aboutText}>{aboutText}</Text>
+          )}
+          {isOwnProfile && (
+            <TouchableOpacity
+              onPress={isEditingAbout ? handleSaveAbout : () => setIsEditingAbout(true)}
+            >
+              <Ionicons
+                name={isEditingAbout ? 'checkmark-circle' : 'pencil'}
+                size={18}
+                color="#00b4d8"
+              />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {!isOwnProfile && (
+          <View style={{ marginTop: 24, marginBottom: 12 }}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Escribe tu opinión</Text>
+            </View>
+            <View style={styles.reviewForm}>
+              <Text style={{ fontSize: 13, color: '#495057', marginBottom: 6, fontWeight: '600' }}>
+                Calificación:
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <TouchableOpacity key={star} onPress={() => setNewRating(star)}>
+                    <Ionicons
+                      name={star <= newRating ? 'star' : 'star-outline'}
+                      size={26}
+                      color="#ffd166"
+                    />
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <TextInput
+                style={styles.inputComment}
+                placeholder="¿Cómo fue tu experiencia con este trabajador?"
+                placeholderTextColor="#adb5bd"
+                multiline
+                value={newComment}
+                onChangeText={setNewComment}
+              />
+
+              {reviewImage && (
+                <View style={{ position: 'relative', marginVertical: 8 }}>
+                  <Image source={{ uri: reviewImage }} style={{ width: '100%', height: 120, borderRadius: 8 }} />
+                  <TouchableOpacity
+                    style={{
+                      position: 'absolute',
+                      top: 6,
+                      right: 6,
+                      backgroundColor: 'rgba(0,0,0,0.6)',
+                      borderRadius: 12,
+                      padding: 4,
+                    }}
+                    onPress={() => setReviewImage(null)}
+                  >
+                    <Ionicons name="close" size={16} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
+                <TouchableOpacity
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                  onPress={handlePickReviewImage}
+                >
+                  <Ionicons name="image-outline" size={20} color="#00b4d8" />
+                  <Text style={{ color: '#00b4d8', fontSize: 13, fontWeight: '600' }}>Agregar foto</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#00b4d8',
+                    paddingHorizontal: 16,
+                    paddingVertical: 10,
+                    borderRadius: 8,
+                  }}
+                  onPress={handleSubmitReview}
+                  disabled={isSubmittingReview}
+                >
+                  {isSubmittingReview ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 14 }}>Enviar Opinión</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )}
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>
+            {isOwnProfile ? 'Mis Opiniones Recibidas' : 'Opiniones del Trabajador'}
+          </Text>
+        </View>
+
+        {reviews.length === 0 ? (
+          <Text style={styles.emptyReviewsText}>Aún no hay reseñas registradas.</Text>
+        ) : (
+          reviews.map((item) => (
+            <View key={item.id} style={stylesGeneral.reviewCard}>
+              <View style={stylesGeneral.reviewHeader}>
+                <View style={stylesGeneral.reviewerInfo}>
+                  {item.userImage ? (
+                    <Image source={{ uri: item.userImage }} style={styles.reviewerAvatarImage} />
+                  ) : (
+                    <View style={stylesGeneral.avatarPlaceholder}>
+                      <Text style={stylesGeneral.avatarLetter}>{item.userName.charAt(0)}</Text>
+                    </View>
+                  )}
+                  <View>
+                    <Text style={stylesGeneral.reviewerName}>{item.userName}</Text>
+                    <Text style={stylesGeneral.reviewDate}>{item.date}</Text>
+                  </View>
+                </View>
+                <View style={stylesGeneral.ratingBadge}>
+                  <Ionicons name="star" size={12} color="#ffd166" />
+                  <Text style={stylesGeneral.ratingBadgeText}>{item.rating}</Text>
+                </View>
+              </View>
+              <Text style={stylesGeneral.reviewComment}>{item.comment}</Text>
+              {item.imageUrl && (
+                <Image source={{ uri: item.imageUrl }} style={stylesGeneral.reviewAttachedImage} resizeMode="cover" />
+              )}
+            </View>
+          ))
+        )}
+      </ScrollView>
     </View>
   );
 }

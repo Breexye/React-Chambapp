@@ -1,9 +1,11 @@
+// app/(tabs)/index.tsx
 import { WorkerCard } from '@/components/WorkerCard';
 import { Colors } from '@/constants/colors';
 import { stylesHome } from '@/constants/stylesHome';
 import { useClientHome } from '@/hooks/use-ClienteHome';
 import { supabase } from '@/src/supabase';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
@@ -44,6 +46,7 @@ interface ClientHomeProps {
 }
 
 export default function ClientHome({ userName }: ClientHomeProps) {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [workersCount, setWorkersCount] = useState<{ [key: string]: number }>({});
   const [allWorkers, setAllWorkers] = useState<ClientWorker[]>([]);
@@ -74,19 +77,31 @@ export default function ClientHome({ userName }: ClientHomeProps) {
       }
 
       if (data) {
+        // Sinónimos actualizados adaptados a cómo guardas la columna 'profession' en Supabase
+        const synonyms: { [key: string]: string[] } = {
+          'Plomería': ['plomero', 'fontanero', 'plomeria'],
+          'Electricista': ['electricista', 'electrico', 'electricidad'],
+          'Carpintería': ['carpintero', 'carpinteria'],
+          'Fotógrafo': ['fotografo', 'fotografa', 'foto', 'fotografia'],
+          'Albañilería': ['albañil', 'albanil', 'constructor', 'albanileria'],
+          'Jardinería': ['jardinero', 'jardineria', 'jardin'],
+        };
+
         const counts: { [key: string]: number } = {};
         POPULAR_TRADES.forEach(trade => {
-          const targetName = trade.name.toLowerCase();
-          
           counts[trade.name] = data.filter((w: any) => {
             if (w.role !== 'trabajador') return false;
-            const userJob = (w.job_title || '').toLowerCase().trim();
-            const target = targetName.trim();
+            // Leemos de 'profession' que es la columna real de tu base de datos
+            const userProfession = (w.profession || w.job_title || '').toLowerCase().trim();
+            const tradeName = trade.name.toLowerCase();
 
-            if (target === 'fotógrafo') {
-              return userJob === 'fotógrafo' || userJob === 'fotografo' || userJob.includes('foto');
+            if (userProfession.includes(tradeName.slice(0, 4))) return true;
+
+            if (synonyms[trade.name] && synonyms[trade.name].some(s => userProfession.includes(s))) {
+              return true;
             }
-            return userJob.includes(target.slice(0, 4));
+
+            return false;
           }).length;
         });
 
@@ -100,8 +115,8 @@ export default function ClientHome({ userName }: ClientHomeProps) {
             email: w.email || '',
             phone: w.phone || '',
             role: w.role || 'trabajador',
-            job_title: w.job_title || 'Profesional',
-            job_description: w.job_description || 'Sin descripción disponible',
+            job_title: w.profession || w.job_title || 'Profesional', // Mapeo correcto desde 'profession'
+            job_description: w.job_description || w.about || 'Sin descripción disponible',
             profile_image: w.profile_image || null,
             ine_front_image: w.ine_front_image || null,
             ine_back_image: w.ine_back_image || null,
@@ -401,9 +416,9 @@ export default function ClientHome({ userName }: ClientHomeProps) {
                   </TouchableOpacity>
 
                   <TouchableOpacity 
-                    style={{ flex: 1, backgroundColor: '#0077B6', paddingVertical: 9, borderRadius: 8, alignItems: 'center' }}
+                    style={{ flex: 1, backgroundColor: '#007776', paddingVertical: 9, borderRadius: 8, alignItems: 'center' }}
                     onPress={() => {
-                      alert(`Abriendo perfil detallado de ${worker.name}`);
+                      router.push(`/(tabs)/Perfil/workerProfile?workerId=${worker.id}`);
                     }}
                   >
                     <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 13 }}>Ver Perfil</Text>

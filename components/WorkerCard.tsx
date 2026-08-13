@@ -1,4 +1,7 @@
-import React from 'react';
+// components/WorkerCard.tsx
+import { supabase } from '@/src/supabase';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export interface Worker {
@@ -18,6 +21,58 @@ interface WorkerCardProps {
 }
 
 export const WorkerCard: React.FC<WorkerCardProps> = ({ worker, onPress }) => {
+  const router = useRouter();
+
+  const [calificacion, setCalificacion] = useState<number>(worker.calificacion ?? 5.0);
+  const [resenasCount, setResenasCount] = useState<number>(worker.resenas ?? 0);
+
+  useEffect(() => {
+    const fetchWorkerReviews = async () => {
+      if (!worker.id) return;
+      try {
+        const { data: reviewsData, error } = await supabase
+          .from('reviews')
+          .select('rating')
+          .eq('worker_id', worker.id);
+
+        if (!error && reviewsData && reviewsData.length > 0) {
+          const total = reviewsData.length;
+          const suma = reviewsData.reduce((acc, curr) => acc + (curr.rating || 0), 0);
+          const promedio = Number((suma / total).toFixed(1));
+
+          setCalificacion(promedio);
+          setResenasCount(total);
+        } else if (reviewsData && reviewsData.length === 0) {
+          setCalificacion(5.0);
+          setResenasCount(0);
+        }
+      } catch (err) {
+        console.error("Error al obtener reseñas en WorkerCard:", err);
+      }
+    };
+
+    fetchWorkerReviews();
+  }, [worker.id]);
+
+  const handleViewProfile = async () => {
+    try {
+      // Validamos si hay una sesión activa en Supabase
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error || !session) {
+        // Si no está registrado / no hay sesión, lo mandamos a iniciar sesión
+        router.push('/login');
+        return;
+      }
+
+      // Si ya tiene sesión, lo mandamos al perfil del trabajador
+      router.push(`/(tabs)/Perfil/workerProfile?workerId=${worker.id}`);
+    } catch (err) {
+      console.error("Error al verificar sesión:", err);
+      router.push('/login');
+    }
+  };
+
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
       <View style={styles.row}>
@@ -31,7 +86,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({ worker, onPress }) => {
 
           <View style={styles.detailsRow}>
             <Text style={styles.rating}>
-              ⭐ {worker.calificacion} <Text style={styles.resenas}>({worker.resenas} reseñas)</Text>
+              ⭐ {calificacion} <Text style={styles.resenas}>({resenasCount} reseñas)</Text>
             </Text>
             {worker.disponible && (
               <View style={styles.badge}>
@@ -47,9 +102,9 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({ worker, onPress }) => {
       </Text>
 
       <View style={styles.buttonContainer}>
-        <View style={styles.btnSecundario}>
+        <TouchableOpacity style={styles.btnSecundario} onPress={handleViewProfile} activeOpacity={0.7}>
           <Text style={styles.btnTextSecundario}>Ver perfil</Text>
-        </View>
+        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
