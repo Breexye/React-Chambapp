@@ -1,66 +1,22 @@
 import { ThemedText } from '@/components/themed-text';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, TouchableOpacity, View } from 'react-native';
+import React from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, TextInput, TouchableOpacity, View } from 'react-native';
 import { styles } from '../../constants/stylesLogin';
 
-// IMPORTACIÓN DE SUPABASE
-import { supabase } from '@/src/supabase';
+// ✅ Ya no se importa supabase aquí: toda la lógica vive en useLogin / AuthContext
+import { useLogin } from '@/hooks/login/use-login';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-
-  const handleLogin = async () => {
-    // Validacion de campos vacios
-    if (!email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Por favor ingresa tu correo y contraseña');
-      return;
-    }
-
-    try {
-      console.log('Iniciando sesión con:', email);
-
-      // 1. Autenticar con Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password,
-      });
-
-      if (authError) throw authError;
-
-      const user = authData.user;
-
-      if (user) {
-        // 2. Buscar los datos adicionales del usuario en la tabla 'users'
-        const { data: userData, error: dbError } = await supabase
-          .from('users')
-          .select('name, role')
-          .eq('id', user.id)
-          .single();
-
-        if (dbError) {
-          console.warn("No se pudo obtener el rol de la tabla users, entrando por defecto:", dbError.message);
-        }
-
-        const userRole = userData?.role || 'cliente';
-        const userName = userData?.name || email.split('@')[0];
-
-        // 3. Redirigir al inicio mandando el rol y el nombre real
-        router.replace({
-          pathname: '/',
-          params: { role: userRole, nombre: userName }
-        });
-      }
-
-    } catch (error: any) {
-      console.error("ERROR CRÍTICO EN SUPABASE:", error.message);
-      Alert.alert("Error de Inicio de Sesión", error.message);
-    }
-  };
+  const {
+    email, setEmail,
+    password, setPassword,
+    showPassword, setShowPassword,
+    submitting,
+    handleLogin,
+  } = useLogin();
 
   return (
     <KeyboardAvoidingView 
@@ -98,6 +54,7 @@ export default function LoginScreen() {
                 autoCapitalize="none"
                 value={email} 
                 onChangeText={setEmail} 
+                editable={!submitting}
               />
             </View>
           </View>
@@ -113,6 +70,7 @@ export default function LoginScreen() {
                 secureTextEntry={!showPassword} 
                 value={password}
                 onChangeText={setPassword}
+                editable={!submitting}
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                 <Ionicons 
@@ -124,8 +82,14 @@ export default function LoginScreen() {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.submitButton} onPress={handleLogin}>
-            <ThemedText style={styles.submitButtonText}>Iniciar Sesión →</ThemedText>
+          <TouchableOpacity 
+            style={[styles.submitButton, submitting && { opacity: 0.6 }]} 
+            onPress={handleLogin}
+            disabled={submitting}
+          >
+            <ThemedText style={styles.submitButtonText}>
+              {submitting ? 'Ingresando...' : 'Iniciar Sesión →'}
+            </ThemedText>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => router.push('/register' as any)}>

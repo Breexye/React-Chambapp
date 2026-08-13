@@ -10,14 +10,14 @@ import {
   View
 } from 'react-native';
 import { Worker, WorkerCard } from '../../components/WorkerCard';
-import db from '../../db.json';
+import database from '../../db.json';
 
 // Agrega esto en src/app/(tabs)/explore.tsx debajo de tus imports
 
 const TRABAJADORES_MOCK = [
   {
     id: '1',
-    nombre: 'Carlos Mendoza',
+    name: 'Carlos Mendoza',
     categoria: 'Plomería',
     oficio: 'Plomería',
     rating: 4.9,
@@ -150,7 +150,7 @@ export default function ExploreScreen() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // 2. En lugar de buscar en internet con "fetch(API_URL)", le asignamos los datos de tu db.json
-      setWorkers(db.trabajadores);
+      setWorkers(database.trabajadores);
     } catch (err: any) {
       setError('Ocurrió un error al cargar los datos locales.');
     } finally {

@@ -1,15 +1,23 @@
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+import { useContactWorker } from '@/hooks/message-hooks/use-contact';
 
 export interface Worker {
   id: string;
   name: string;
-  job_title: string;
+  profession: string;
+  job_description: string;
+  profile_image: string;
   calificacion: number;
   resenas: number;
   disponible: boolean;
-  job_description: string;
-  profile_image: string;
 }
 
 interface WorkerCardProps {
@@ -17,40 +25,86 @@ interface WorkerCardProps {
   onPress?: () => void;
 }
 
-export const WorkerCard: React.FC<WorkerCardProps> = ({ worker, onPress }) => {
+export const WorkerCard: React.FC<WorkerCardProps> = ({
+  worker,
+  onPress,
+}) => {
+
+  const { contactarTrabajador } = useContactWorker();
+
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={onPress}
+      activeOpacity={0.8}
+    >
+
       <View style={styles.row}>
-        <Image 
-          source={{ uri: worker.profile_image || 'https://via.placeholder.com/150' }} 
-          style={styles.avatar} 
+
+        <Image
+          source={{
+            uri:
+              worker.profile_image ||
+              'https://via.placeholder.com/150',
+          }}
+          style={styles.avatar}
         />
+
         <View style={styles.infoContainer}>
-          <Text style={styles.nombre}>{worker.name}</Text>
-          <Text style={styles.oficio}>{worker.job_title}</Text>
+
+          <Text style={styles.nombre}>
+            {worker.name}
+          </Text>
+
+          <Text style={styles.oficio}>
+            {worker.profession}
+          </Text>
 
           <View style={styles.detailsRow}>
+
             <Text style={styles.rating}>
-              ⭐ {worker.calificacion} <Text style={styles.resenas}>({worker.resenas} reseñas)</Text>
+              ⭐ {worker.calificacion}
+
+              <Text style={styles.resenas}>
+                ({worker.resenas} reseñas)
+              </Text>
             </Text>
+
             {worker.disponible && (
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>Disponible</Text>
+                <Text style={styles.badgeText}>
+                  Disponible
+                </Text>
               </View>
             )}
+
           </View>
+
         </View>
+
       </View>
 
-      <Text style={styles.descripcion} numberOfLines={2}>
-        {worker.job_description || 'Sin descripción disponible.'}
+      <Text
+        style={styles.descripcion}
+        numberOfLines={2}
+      >
+        {worker.job_description ||
+          'Sin descripción disponible.'}
       </Text>
 
       <View style={styles.buttonContainer}>
-        <View style={styles.btnSecundario}>
-          <Text style={styles.btnTextSecundario}>Ver perfil</Text>
-        </View>
+
+        <TouchableOpacity
+          style={styles.btnSecundario}
+          onPress={() => contactarTrabajador(worker)}
+        >
+          <Text style={styles.btnTextSecundario}>
+            Contactar
+          </Text>
+        </TouchableOpacity>
+
       </View>
+
     </TouchableOpacity>
   );
 };
