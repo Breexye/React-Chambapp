@@ -5,9 +5,6 @@ import { useRouter } from "expo-router";
 import { NavBar } from "@/components/ui/nav-bar";
 import { UserChats } from "@/components/messages/userChats";
 
-//importaciones del supabase (base de datos)
-import { supabase } from '@/src/supabase';
-
 export default function Message() {
     const router = useRouter();
 

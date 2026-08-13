@@ -61,22 +61,6 @@ export function NavBar() {
         setFilteredWorkers([]);
         router.setParams({ role: '', nombre: '' });
       };
-    
-    const executeSearch = (text: string) => {
-        setSearchQuery(text);
-        if (text.trim() === '') {
-            setFilteredWorkers([]);
-        } else {
-            const results = dataFromDb.trabajadores.filter(worker => 
-            worker.oficio.toLowerCase().includes(text.toLowerCase())
-            );
-            setFilteredWorkers(results as Worker[]);
-        }
-    };
-
-    const handleViewProfileProtected = () => {
-        router.push('/login');
-    };
 
     const menuItems = currentRole === 'cliente' 
     ? [

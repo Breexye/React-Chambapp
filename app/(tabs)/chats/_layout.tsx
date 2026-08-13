@@ -23,9 +23,9 @@ export default function RootLayout() {
                         }} 
                     />
                     <Stack.Screen 
-                        name="conversaciones" 
+                        name="conversations" 
                         options={{ 
-                            headerShown: true,
+                            headerShown: false,
                             title: 'conversaciones',
                         }}     
                     />
