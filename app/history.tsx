@@ -1,6 +1,8 @@
+// app/history.tsx
 import ContractRequestModal from '@/components/ContractRequestModal';
 import { supabase } from '@/src/supabase';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
@@ -27,6 +29,7 @@ interface ServiceItem {
 }
 
 export default function HistoryScreen() {
+  const router = useRouter();
   const [servicesList, setServicesList] = useState<ServiceItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
@@ -55,7 +58,6 @@ export default function HistoryScreen() {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-
       setCurrentUserId(user.id);
 
       const { data: userData } = await supabase
@@ -69,8 +71,8 @@ export default function HistoryScreen() {
 
       let query = supabase.from('contracts').select(`
         *,
-        worker:users!contracts_worker_id_fkey (name),
-        client:users!contracts_client_id_fkey (name)
+        worker:users!contracts_worker_id_fkey(name),
+        client:users!contracts_client_id_fkey(name)
       `);
 
       if (role === 'cliente') {
@@ -85,13 +87,12 @@ export default function HistoryScreen() {
       if (data) {
         const formattedData: ServiceItem[] = data.map((item: any) => {
           const isClient = role === 'cliente';
-          // Limpiar formato de fecha YYYY-MM-DD
           const rawDate = item.service_date || item.created_at || '';
           const formattedDate = rawDate.split('T')[0];
 
           return {
             id: item.id.toString(),
-            displayName: isClient 
+            displayName: isClient
               ? (item.worker?.name || item.worker_name || 'Trabajador Asignado')
               : (item.client?.name || item.client_name || 'Cliente'),
             displayRoleLabel: isClient ? 'Trabajador' : 'Cliente',
@@ -163,22 +164,29 @@ export default function HistoryScreen() {
     selectedColor: '#0F172A',
   };
 
-  // Filtrar los contratos correspondientes a la fecha seleccionada en el calendario
   const servicesForSelectedDate = servicesList.filter(s => s.date === selectedDate);
 
   const getStatusColor = (status: string) => {
     switch (status) {
+      case 'Cancelado': return { bg: '#FEE2E2', text: '#DC2626' };
       case 'En camino': return { bg: '#FFF3C7', text: '#D97706' };
       case 'En proceso': return { bg: '#E0F2FE', text: '#0284C7' };
       case 'Completado': return { bg: '#DCFCE7', text: '#16A34A' };
-      case 'Cancelado': return { bg: '#FEE2E2', text: '#DC2626' };
       default: return { bg: '#F3F4F6', text: '#4B5563' };
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Encabezado */}
+      {/* Encabezado superior con botón de casita hacia clientHome y logo ChambApp */}
+      <View style={styles.globalHeaderTopRow}>
+      <TouchableOpacity onPress={() => router.push('/clientHome' as any)} style={styles.headerIconBtn}>
+        <Ionicons name="home-outline" size={26} color="#FFFFFF" />
+      </TouchableOpacity>
+        <Text style={styles.globalHeaderLogo}>ChambApp</Text>
+        <View style={{ width: 40 }} />
+      </View>
+
       <View style={styles.header}>
         <Text style={styles.title}>Mis Servicios</Text>
         <Text style={styles.subtitle}>Historial y seguimiento de contratos</Text>
@@ -186,13 +194,13 @@ export default function HistoryScreen() {
 
       {/* Selector de Vista (Lista / Calendario) */}
       <View style={styles.toggleContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.toggleButton, viewMode === 'list' && styles.toggleActive]}
           onPress={() => setViewMode('list')}
         >
           <Text style={[styles.toggleText, viewMode === 'list' && styles.toggleTextActive]}>Lista</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.toggleButton, viewMode === 'calendar' && styles.toggleActive]}
           onPress={() => setViewMode('calendar')}
         >
@@ -222,7 +230,9 @@ export default function HistoryScreen() {
                           <Text style={[styles.statusText, { color: statusColor.text }]}>{item.status}</Text>
                         </View>
                       </View>
-                      <Text style={styles.workerLabel}>{item.displayRoleLabel}: <Text style={styles.workerName}>{item.displayName}</Text></Text>
+                      <Text style={styles.workerLabel}>
+                        {item.displayRoleLabel}: <Text style={styles.workerName}>{item.displayName}</Text>
+                      </Text>
                       <Text style={styles.cardDesc}>Descripción: {item.details}</Text>
                     </TouchableOpacity>
                   );
@@ -246,7 +256,9 @@ export default function HistoryScreen() {
                           <Text style={[styles.statusText, { color: statusColor.text }]}>{item.status}</Text>
                         </View>
                       </View>
-                      <Text style={styles.workerLabel}>{item.displayRoleLabel}: <Text style={styles.workerName}>{item.displayName}</Text></Text>
+                      <Text style={styles.workerLabel}>
+                        {item.displayRoleLabel}: <Text style={styles.workerName}>{item.displayName}</Text>
+                      </Text>
                       <Text style={styles.cardDesc}>Descripción: {item.details}</Text>
                     </TouchableOpacity>
                   );
@@ -254,7 +266,7 @@ export default function HistoryScreen() {
             )}
           </>
         ) : (
-          /* Vista de Calendario Estilo iOS */
+          /* Vista de Calendario Estilo ios */
           <View style={styles.calendarContainer}>
             <Calendar
               onDayPress={(day) => setSelectedDate(day.dateString)}
@@ -307,10 +319,10 @@ export default function HistoryScreen() {
 
         {/* Modal de Detalles */}
         {selectedService && (
-          <ContractRequestModal 
-            visible={!!selectedService} 
-            onClose={() => setSelectedService(null)} 
-            contractData={selectedService} 
+          <ContractRequestModal
+            visible={!!selectedService}
+            onClose={() => setSelectedService(null)}
+            contractData={selectedService}
           />
         )}
       </ScrollView>
@@ -328,38 +340,38 @@ export default function HistoryScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.createModalContent}>
             <Text style={styles.modalHeaderTitle}>Crear Contrato de Prueba</Text>
-
+            
             <Text style={styles.inputLabel}>UUID del Cliente (client_id)</Text>
-            <TextInput 
-              style={styles.input} 
-              placeholder="Ej. d3b07384-d113-41..." 
+            <TextInput
+              style={styles.input}
+              placeholder="Ej. d3b07384-d113-41..."
               placeholderTextColor="#94A3B8"
               value={formClientId}
               onChangeText={setFormClientId}
             />
 
             <Text style={styles.inputLabel}>Nombre del Servicio</Text>
-            <TextInput 
-              style={styles.input} 
-              placeholder="Ej. Plomería" 
+            <TextInput
+              style={styles.input}
+              placeholder="Ej. Plomería"
               placeholderTextColor="#94A3B8"
               value={formServiceName}
               onChangeText={setFormServiceName}
             />
 
             <Text style={styles.inputLabel}>Descripción</Text>
-            <TextInput 
-              style={styles.input} 
-              placeholder="Ej. Arreglar tubería rota" 
+            <TextInput
+              style={styles.input}
+              placeholder="Ej. Arreglar tubería rota"
               placeholderTextColor="#94A3B8"
               value={formDescription}
               onChangeText={setFormDescription}
             />
 
             <Text style={styles.inputLabel}>Total ($)</Text>
-            <TextInput 
-              style={styles.input} 
-              placeholder="Ej. 500" 
+            <TextInput
+              style={styles.input}
+              placeholder="Ej. 500"
               placeholderTextColor="#94A3B8"
               keyboardType="numeric"
               value={formTotal}
@@ -367,9 +379,9 @@ export default function HistoryScreen() {
             />
 
             <Text style={styles.inputLabel}>Fecha (YYYY-MM-DD)</Text>
-            <TextInput 
-              style={styles.input} 
-              placeholder="2026-08-30" 
+            <TextInput
+              style={styles.input}
+              placeholder="2026-08-30"
               placeholderTextColor="#94A3B8"
               value={formDate}
               onChangeText={setFormDate}
@@ -391,6 +403,28 @@ export default function HistoryScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
+  globalHeaderTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#0F172A',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  headerIconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  globalHeaderLogo: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
   header: { padding: 20, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' },
   title: { fontSize: 24, fontWeight: 'bold', color: '#0F172A' },
   subtitle: { fontSize: 14, color: '#64748B', marginTop: 4 },

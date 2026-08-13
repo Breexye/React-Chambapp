@@ -1,0 +1,106 @@
+// constants/stylesClient.ts
+import { StyleSheet } from 'react-native';
+
+export const stylesClient = StyleSheet.create({
+  profileHeader: {
+    alignItems: 'center',
+    marginVertical: 15,
+  },
+  avatarContainer: {
+    position: 'relative',
+    marginBottom: 8,
+  },
+  avatar: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    borderWidth: 3,
+    borderColor: '#00b4d8',
+  },
+  cameraBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#00b4d8',
+    borderRadius: 18,
+    padding: 8,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+  roleText: {
+    color: '#666666',
+    fontSize: 14,
+    marginTop: 4,
+  },
+  // Formulario de edición
+  formSection: {
+    marginVertical: 5,
+    gap: 10,
+  },
+  label: {
+    color: '#555555',
+    fontSize: 13,
+    marginBottom: 4,
+    marginLeft: 4,
+    fontWeight: '600',
+  },
+  input: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 10,
+    color: '#212529',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    borderWidth: 1,
+    borderColor: '#ced4da',
+  },
+  submitBtn: {
+    backgroundColor: '#00b4d8',
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  submitBtnText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  contactBtn: {
+    flex: 1,
+    backgroundColor: '#00b4d8',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 8,
+  },
+  favoriteBtn: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#00b4d8',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 8,
+  },
+  favoriteBtnActive: {
+    backgroundColor: '#ffd16622',
+  },
+  reviewForm: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#00b4d8',
+  },
+});

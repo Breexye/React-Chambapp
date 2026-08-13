@@ -1,11 +1,31 @@
+// app/(tabs)/index.tsx
 import { WorkerCard } from '@/components/WorkerCard';
 import { Colors } from '@/constants/colors';
 import { stylesHome } from '@/constants/stylesHome';
 import { useClientHome } from '@/hooks/use-ClienteHome';
 import { supabase } from '@/src/supabase';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
+export interface ClientWorker {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: string;
+  job_title: string;
+  job_description: string;
+  profile_image?: string;
+  ine_front_image?: string;
+  ine_back_image?: string;
+  calificacion: number;
+  resenas: number;
+  disponible: boolean;
+  latitude: number;
+  longitude: number;
+}
 
 const POPULAR_TRADES = [
   { id: '1', name: 'Plomería', icon: 'water-outline' },
@@ -26,9 +46,10 @@ interface ClientHomeProps {
 }
 
 export default function ClientHome({ userName }: ClientHomeProps) {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [workersCount, setWorkersCount] = useState<{ [key: string]: number }>({});
-  const [allWorkers, setAllWorkers] = useState<any[]>([]);
+  const [allWorkers, setAllWorkers] = useState<ClientWorker[]>([]);
   const [loadingWorkers, setLoadingWorkers] = useState(true);
 
   const {
@@ -51,38 +72,57 @@ export default function ClientHome({ userName }: ClientHomeProps) {
         .from('users')
         .select('*');
 
-      if (error) return;
+      if (error) {
+        return;
+      }
 
       if (data) {
+        // Sinónimos actualizados adaptados a cómo guardas la columna 'profession' en Supabase
+        const synonyms: { [key: string]: string[] } = {
+          'Plomería': ['plomero', 'fontanero', 'plomeria'],
+          'Electricista': ['electricista', 'electrico', 'electricidad'],
+          'Carpintería': ['carpintero', 'carpinteria'],
+          'Fotógrafo': ['fotografo', 'fotografa', 'foto', 'fotografia'],
+          'Albañilería': ['albañil', 'albanil', 'constructor', 'albanileria'],
+          'Jardinería': ['jardinero', 'jardineria', 'jardin'],
+        };
+
         const counts: { [key: string]: number } = {};
         POPULAR_TRADES.forEach(trade => {
-          const targetName = trade.name.toLowerCase();
-          
-          counts[trade.name] = data.filter(w => {
+          counts[trade.name] = data.filter((w: any) => {
             if (w.role !== 'trabajador') return false;
-            const userJob = (w.job_title || w.profession || '').toLowerCase().trim();
-            const target = targetName.trim();
+            // Leemos de 'profession' que es la columna real de tu base de datos
+            const userProfession = (w.profession || w.job_title || '').toLowerCase().trim();
+            const tradeName = trade.name.toLowerCase();
 
-            if (target === 'fotógrafo') {
-              return userJob === 'fotógrafo' || userJob === 'fotografo' || userJob.includes('foto');
+            if (userProfession.includes(tradeName.slice(0, 4))) return true;
+
+            if (synonyms[trade.name] && synonyms[trade.name].some(s => userProfession.includes(s))) {
+              return true;
             }
-            return userJob.includes(target.slice(0, 4));
+
+            return false;
           }).length;
         });
 
         setWorkersCount(counts);
 
-        const formattedWorkers = data
-          .filter(w => w.role === 'trabajador')
-          .map(w => ({
+        const formattedWorkers: ClientWorker[] = data
+          .filter((w: any) => w.role === 'trabajador')
+          .map((w: any) => ({
             id: w.id,
-            name: w.name,
-            profession: w.job_title || w.profession || 'Profesional',
-            job_description: w.job_description || 'Sin descripción disponible',
-            rating: w.rating || 5,
-            reviewsCount: w.reviewsCount || 0,
-            status: w.status || 'Disponible',
-            profile_image: w.profile_image,
+            name: w.name || 'Sin nombre',
+            email: w.email || '',
+            phone: w.phone || '',
+            role: w.role || 'trabajador',
+            job_title: w.profession || w.job_title || 'Profesional', // Mapeo correcto desde 'profession'
+            job_description: w.job_description || w.about || 'Sin descripción disponible',
+            profile_image: w.profile_image || null,
+            ine_front_image: w.ine_front_image || null,
+            ine_back_image: w.ine_back_image || null,
+            calificacion: w.rating || 5,
+            resenas: w.reviewsCount || 0,
+            disponible: true,
             latitude: w.latitude || CHIHUAHUA_DEFAULT.latitude,
             longitude: w.longitude || CHIHUAHUA_DEFAULT.longitude,
           }));
@@ -104,8 +144,9 @@ export default function ClientHome({ userName }: ClientHomeProps) {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase();
     const nameMatch = worker.name?.toLowerCase().includes(query);
-    const professionMatch = worker.profession?.toLowerCase().includes(query);
-    return nameMatch || professionMatch;
+    const jobTitleMatch = worker.job_title?.toLowerCase().includes(query);
+    const descriptionMatch = worker.job_description?.toLowerCase().includes(query);
+    return nameMatch || jobTitleMatch || descriptionMatch;
   });
 
   const renderWebMap = () => {
@@ -130,7 +171,7 @@ export default function ClientHome({ userName }: ClientHomeProps) {
           var workers = ${JSON.stringify(filteredWorkers)};
           workers.forEach(function(w) {
             L.marker([w.latitude, w.longitude]).addTo(map)
-              .bindPopup('<b>' + w.name + '</b><br>' + w.profession);
+              .bindPopup('<b>' + w.name + '</b><br>' + w.job_title);
           });
         </script>
       </body>
@@ -162,6 +203,7 @@ export default function ClientHome({ userName }: ClientHomeProps) {
           longitudeDelta: CHIHUAHUA_DEFAULT.longitudeDelta,
         }}
         showsUserLocation={true}
+        onPress={() => setSelectedWorker(null)}
       >
         {userLocation && (
           <Circle
@@ -177,8 +219,11 @@ export default function ClientHome({ userName }: ClientHomeProps) {
             key={worker.id}
             coordinate={{ latitude: worker.latitude, longitude: worker.longitude }}
             title={worker.name}
-            description={worker.profession}
-            onPress={() => setSelectedWorker(worker)}
+            description={worker.job_title}
+            onPress={(e: any) => {
+              e.stopPropagation?.();
+              setSelectedWorker(worker as any);
+            }}
           />
         ))}
       </MapView>
@@ -255,8 +300,8 @@ export default function ClientHome({ userName }: ClientHomeProps) {
             filteredWorkers.map((worker) => (
               <WorkerCard 
                 key={worker.id}
-                worker={worker}
-                onPress={() => setSelectedWorker(worker)}
+                worker={worker as any}
+                onPress={() => setSelectedWorker(worker as any)}
               />
             ))
           ) : (
@@ -296,7 +341,16 @@ export default function ClientHome({ userName }: ClientHomeProps) {
       </View>
 
       <View style={stylesHome.mapSection}>
-        <View style={stylesHome.mapContainer}>
+        <View style={{ paddingHorizontal: 20, marginBottom: 10 }}>
+          <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#03045E' }}>
+            Trabajadores Cerca de ti
+          </Text>
+          <Text style={{ fontSize: 13, color: '#64748B' }}>
+            Toca un marcador en el mapa para ver sus opciones de contacto
+          </Text>
+        </View>
+
+        <View style={[stylesHome.mapContainer, { position: 'relative' }]}>
           {loadingLocation ? (
             <ActivityIndicator size="large" color={Colors.light.primary} style={{ flex: 1 }} />
           ) : Platform.OS === 'web' ? (
@@ -304,6 +358,75 @@ export default function ClientHome({ userName }: ClientHomeProps) {
           ) : (
             renderNativeMap()
           )}
+
+          {selectedWorker && (() => {
+            const worker = selectedWorker as any;
+            return (
+              <View style={{
+                position: 'absolute',
+                bottom: 15,
+                left: 15,
+                right: 15,
+                backgroundColor: 'white',
+                borderRadius: 14,
+                padding: 14,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.2,
+                shadowRadius: 6,
+                elevation: 5,
+                borderWidth: 1,
+                borderColor: '#E2E8F0'
+              }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                    {worker.profile_image ? (
+                      <Image source={{ uri: worker.profile_image }} style={{ width: 45, height: 45, borderRadius: 22.5 }} />
+                    ) : (
+                      <View style={{ width: 45, height: 45, borderRadius: 22.5, backgroundColor: '#E0F2FE', justifyContent: 'center', alignItems: 'center' }}>
+                        <Ionicons name="person" size={22} color="#0077B6" />
+                      </View>
+                    )}
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#03045E' }} numberOfLines={1}>
+                        {worker.name}
+                      </Text>
+                      <Text style={{ fontSize: 13, color: '#0088CC', fontWeight: '600' }}>
+                        {worker.job_title}
+                      </Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity onPress={() => setSelectedWorker(null)}>
+                    <Ionicons name="close-circle" size={22} color="#94A3B8" />
+                  </TouchableOpacity>
+                </View>
+
+                <Text style={{ fontSize: 12, color: '#64748B', marginBottom: 12 }} numberOfLines={2}>
+                  {worker.job_description}
+                </Text>
+
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <TouchableOpacity 
+                    style={{ flex: 1, backgroundColor: '#E0F2FE', paddingVertical: 9, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: '#00B4D8' }}
+                    onPress={() => {
+                      alert(`Contactando a ${worker.name} al tel: ${worker.phone || 'No disponible'}`);
+                    }}
+                  >
+                    <Text style={{ color: '#0077B6', fontWeight: 'bold', fontSize: 13 }}>Contactar</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity 
+                    style={{ flex: 1, backgroundColor: '#007776', paddingVertical: 9, borderRadius: 8, alignItems: 'center' }}
+                    onPress={() => {
+                      router.push(`/(tabs)/Perfil/workerProfile?workerId=${worker.id}`);
+                    }}
+                  >
+                    <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 13 }}>Ver Perfil</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            );
+          })()}
         </View>
       </View>
 
