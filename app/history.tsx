@@ -51,6 +51,26 @@ export default function HistoryScreen() {
 
   useEffect(() => {
     fetchContracts();
+
+    // Suscripción en tiempo real a Supabase para reflejar contratos creados desde el chat o cualquier vista
+    const subscription = supabase
+      .channel('public:contracts')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Escucha INSERT, UPDATE y DELETE
+          schema: 'public',
+          table: 'contracts',
+        },
+        () => {
+          fetchContracts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
   }, []);
 
   const fetchContracts = async () => {
@@ -180,9 +200,9 @@ export default function HistoryScreen() {
     <SafeAreaView style={styles.container}>
       {/* Encabezado superior con botón de casita hacia clientHome y logo ChambApp */}
       <View style={styles.globalHeaderTopRow}>
-      <TouchableOpacity onPress={() => router.push('/clientHome' as any)} style={styles.headerIconBtn}>
-        <Ionicons name="home-outline" size={26} color="#FFFFFF" />
-      </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push('/clientHome' as any)} style={styles.headerIconBtn}>
+          <Ionicons name="home-outline" size={26} color="#FFFFFF" />
+        </TouchableOpacity>
         <Text style={styles.globalHeaderLogo}>ChambApp</Text>
         <View style={{ width: 40 }} />
       </View>

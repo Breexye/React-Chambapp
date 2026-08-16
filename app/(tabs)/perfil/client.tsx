@@ -37,7 +37,6 @@ export default function ClientProfileScreen() {
 
       const data = await userService.getUserById(user.id);
       setClientData(data);
-      // CORREGIDO: Usamos profile_image en lugar de avatar_url
       if (data?.profile_image) setProfileImage(data.profile_image);
       setName(data?.name || '');
       setPhone(data?.phone || '');
@@ -65,9 +64,7 @@ export default function ClientProfileScreen() {
 
       try {
         Alert.alert('Actualizando...', 'Subiendo nueva foto de perfil.');
-        // CORREGIDO: Se usa el bucket 'documents' y la carpeta 'profiles'
         const publicUrl = await storageService.uploadImage(imageUri, 'profiles', currentUserId);
-        // CORREGIDO: Se actualiza la columna 'profile_image' en la base de datos
         await userService.updateClientProfile(currentUserId, { profile_image: publicUrl });
         Alert.alert('¡Éxito!', 'Foto de perfil actualizada.');
       } catch (error: any) {
@@ -132,7 +129,7 @@ export default function ClientProfileScreen() {
           <Ionicons name="home-outline" size={26} color="#ffffff" />
         </TouchableOpacity>
         <Text style={stylesGeneral.logoText}>ChambApp</Text>
-        <TouchableOpacity style={stylesGeneral.headerIconBtn}>
+        <TouchableOpacity style={stylesGeneral.headerIconBtn} onPress={() => router.push('/(tabs)/Perfil/clientProfiles')}>
           <Ionicons name="person-circle-outline" size={26} color="#ffffff" />
         </TouchableOpacity>
       </View>

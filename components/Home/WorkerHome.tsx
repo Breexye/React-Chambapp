@@ -63,9 +63,10 @@ export default function WorkerHome() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // CORRECCIÓN: Se cambió 'job_title' por 'profession' y se añadió 'job_description'
       const { data: userData, error } = await supabase
         .from('users')
-        .select('name, job_title, profile_image')
+        .select('name, profession, job_description, profile_image')
         .eq('id', user.id)
         .single();
 
@@ -73,7 +74,8 @@ export default function WorkerHome() {
 
       if (userData) {
         setWorkerName(userData.name || 'Trabajador');
-        setJobTitle(userData.job_title || 'Profesional Independiente');
+        // Usamos profession como título principal del puesto
+        setJobTitle(userData.profession || 'Profesional Independiente');
         
         if (userData.profile_image && userData.profile_image.trim() !== '') {
           let imagePath = userData.profile_image.trim();

@@ -1,26 +1,28 @@
 import {
-  View,
+  Image,
   Text,
   TouchableOpacity,
-  Image,
+  View,
 } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-import { InfoUser } from '@/constants/messages-styles/infoUser';
 import { Colors } from '@/constants/colors';
+import { InfoUser } from '@/constants/messages-styles/infoUser';
 
 interface BarMessageProps {
   name: string;
   profession: string;
   profileImage?: string;
+  onPressContract?: () => void;
 }
 
 export function BarMessage({
   name,
   profession,
   profileImage,
+  onPressContract,
 }: BarMessageProps) {
 
   const router = useRouter();
@@ -65,9 +67,9 @@ export function BarMessage({
       </View>
 
       <View style={InfoUser.buttonViewContract}>
-
         <TouchableOpacity
           style={InfoUser.buttonContract}
+          onPress={onPressContract}
         >
           <Text
             style={{
@@ -77,7 +79,6 @@ export function BarMessage({
             Contrato
           </Text>
         </TouchableOpacity>
-
       </View>
 
     </View>

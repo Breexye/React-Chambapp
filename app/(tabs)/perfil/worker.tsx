@@ -1,4 +1,5 @@
 // app/(tabs)/Perfil/workerProfile.tsx
+// app/(tabs)/Perfil/worker.tsx (o workerProfile.tsx dependiendo de tu estructura de carpetas)
 import { stylesGeneral } from '@/constants/stylesGeneral';
 import { stylesWorker as styles } from '@/constants/stylesWorker';
 import { reviewService } from '@/services/reviewService';
@@ -10,14 +11,14 @@ import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 interface ReviewUI {
@@ -253,7 +254,11 @@ export default function WorkerProfileScreen() {
           <Ionicons name="home-outline" size={26} color="#ffffff" />
         </TouchableOpacity>
         <Text style={stylesGeneral.logoText}>ChambApp</Text>
-        <TouchableOpacity style={stylesGeneral.headerIconBtn}>
+        {/* Ruta corregida para evitar el error de ruta no encontrada */}
+        <TouchableOpacity 
+          style={stylesGeneral.headerIconBtn} 
+          onPress={() => router.push({ pathname: '/(tabs)/Perfil/workerProfile', params: { workerId: currentUserId } })}
+        >
           <Ionicons name="person-circle-outline" size={26} color="#ffffff" />
         </TouchableOpacity>
       </View>
